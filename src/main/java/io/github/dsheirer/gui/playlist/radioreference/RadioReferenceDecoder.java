@@ -308,6 +308,8 @@ public class RadioReferenceDecoder
 
         switch(type.getName())
         {
+            case "DMR":
+                return Protocol.DMR;
             case "LTR":
                 if(flavor.getName().contentEquals("Standard") || flavor.getName().contentEquals("Net"))
                 {
@@ -329,7 +331,6 @@ public class RadioReferenceDecoder
                     return Protocol.APCO25;
                 }
                 break;
-            case "DMR":
             case "NXDN":
             case "EDACS":
             case "TETRA":
@@ -359,6 +360,8 @@ public class RadioReferenceDecoder
         {
             switch(type.getName())
             {
+                case "DMR":
+                    return DecoderType.DMR;
                 case "LTR":
                     if(flavor.getName().contentEquals("Net"))
                     {

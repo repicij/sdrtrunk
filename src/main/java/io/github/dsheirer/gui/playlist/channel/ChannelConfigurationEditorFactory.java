@@ -51,7 +51,9 @@ public class ChannelConfigurationEditorFactory
         switch(decoderType)
         {
             case AM:
-                return new AMConfigurationEditor(playlistManager, userPreferences);
+                return new AMConfigurationEditor(playlistManager);
+            case DMR:
+                return new DMRConfigurationEditor(playlistManager);
             case NBFM:
                 return new NBFMConfigurationEditor(playlistManager, userPreferences);
             case LTR_NET:
