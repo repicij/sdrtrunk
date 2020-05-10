@@ -4,12 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import io.github.dsheirer.module.decode.DecoderType;
 import io.github.dsheirer.module.decode.config.DecodeConfiguration;
-import io.github.dsheirer.module.decode.dmr.DMRDecoder;
 import io.github.dsheirer.source.tuner.channel.ChannelSpecification;
 
-public class DecodeConfigDMR extends DecodeConfiguration {
-    private DMRDecoder.Modulation mModulation = DMRDecoder.Modulation.C4FM;
-
+public class DecodeConfigDMR extends DecodeConfiguration
+{
     private int mCallTimeout = 1;
     private int mTrafficChannelPoolSize = TRAFFIC_CHANNEL_LIMIT_DEFAULT;
     private boolean mIgnoreDataCalls = true;
@@ -22,17 +20,6 @@ public class DecodeConfigDMR extends DecodeConfiguration {
     public DecoderType getDecoderType()
     {
         return DecoderType.DMR;
-    }
-
-    @JacksonXmlProperty(isAttribute = true, localName = "modulation")
-    public DMRDecoder.Modulation getModulation()
-    {
-        return mModulation;
-    }
-
-    public void setModulation(DMRDecoder.Modulation modulation)
-    {
-        mModulation = modulation;
     }
 
     @JacksonXmlProperty(isAttribute = true, localName = "ignore_data_calls")

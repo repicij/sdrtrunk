@@ -1,18 +1,17 @@
 package io.github.dsheirer.module.decode.dmr.message.data;
 
-import io.github.dsheirer.alias.Alias;
-import io.github.dsheirer.bits.BinaryMessage;
 import io.github.dsheirer.bits.BitSetFullException;
 import io.github.dsheirer.bits.CorrectedBinaryMessage;
 import io.github.dsheirer.identifier.Identifier;
 import io.github.dsheirer.module.decode.dmr.DMRSyncPattern;
 import io.github.dsheirer.module.decode.dmr.message.DMRMessage;
-import io.github.dsheirer.protocol.Protocol;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.github.dsheirer.edac.BPTC_196_96.*;
+import static io.github.dsheirer.edac.BPTC_196_96.bptc_196_96_check_and_repair;
+import static io.github.dsheirer.edac.BPTC_196_96.bptc_196_96_extractdata;
+import static io.github.dsheirer.edac.BPTC_196_96.bptc_deinterleave;
 
 public class DataMessage extends DMRMessage
 {
