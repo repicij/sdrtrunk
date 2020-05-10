@@ -18,8 +18,8 @@ public class MBCMessage extends DMRMessage {
      * @param syncPattern
      * @param message     containing 288-bit DMR message with preliminary bit corrections indicated.
      */
-    public MBCMessage(DMRSyncPattern syncPattern, CorrectedBinaryMessage message) {
-        super(syncPattern, message);
+    public MBCMessage(DMRSyncPattern syncPattern, CorrectedBinaryMessage message, long timestamp, int timeslot) {
+        super(syncPattern, message, timestamp, timeslot);
     }
 
     @Override
@@ -34,6 +34,6 @@ public class MBCMessage extends DMRMessage {
 
     @Override
     public List<Identifier> getIdentifiers() {
-        return new ArrayList<Identifier>();
+        return new ArrayList<>();
     }
 }

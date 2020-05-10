@@ -23,9 +23,9 @@ public class DataMessage extends DMRMessage
      * @param syncPattern either BASE_STATION_DATA or MOBILE_STATION_DATA
      * @param message containing 288-bit DMR message with preliminary bit corrections indicated.
      */
-    public DataMessage(DMRSyncPattern syncPattern, CorrectedBinaryMessage message)
+    public DataMessage(DMRSyncPattern syncPattern, CorrectedBinaryMessage message, long timestamp, int timeslot)
     {
-        super(syncPattern, message);
+        super(syncPattern, message, timestamp, timeslot);
     }
 
     /**

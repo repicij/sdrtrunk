@@ -8,7 +8,6 @@ import io.github.dsheirer.source.tuner.channel.ChannelSpecification;
 
 public class DecodeConfigDMR extends DecodeConfiguration
 {
-    private int mCallTimeout = 1;
     private int mTrafficChannelPoolSize = TRAFFIC_CHANNEL_LIMIT_DEFAULT;
     private boolean mIgnoreDataCalls = true;
 
@@ -32,29 +31,6 @@ public class DecodeConfigDMR extends DecodeConfiguration
     {
         mIgnoreDataCalls = ignore;
     }
-
-    /**
-     * Note: this field is now deprecated.
-     *
-     * @return
-     */
-    @JsonIgnore
-    @Deprecated
-    public int getCallTimeout()
-    {
-        return mCallTimeout;
-    }
-
-    /**
-     * Sets the call timeout value in seconds ( 10 - 600 );
-     *
-     * @param timeout
-     */
-    @Deprecated
-    public void setCallTimeout(int timeout)
-    {
-    }
-
 
     @JacksonXmlProperty(isAttribute = true, localName = "traffic_channel_pool_size")
     public int getTrafficChannelPoolSize()

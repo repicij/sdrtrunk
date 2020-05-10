@@ -14,8 +14,9 @@ public class FullLCMessage extends DataMessage {
      * @param syncPattern either BASE_STATION_DATA or MOBILE_STATION_DATA
      * @param message     containing 288-bit DMR message with preliminary bit corrections indicated.
      */
-    public FullLCMessage(DMRSyncPattern syncPattern, CorrectedBinaryMessage message) {
-        super(syncPattern, message);
+    public FullLCMessage(DMRSyncPattern syncPattern, CorrectedBinaryMessage message, long timestamp, int timeslot)
+    {
+        super(syncPattern, message, timestamp, timeslot);
         dataMessage = getMessageBody(message);
     }
     public static String getServiceOption(byte so)

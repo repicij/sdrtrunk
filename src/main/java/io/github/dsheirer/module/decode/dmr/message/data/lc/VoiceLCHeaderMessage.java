@@ -1,17 +1,7 @@
 package io.github.dsheirer.module.decode.dmr.message.data.lc;
 
-import io.github.dsheirer.bits.BinaryMessage;
-import io.github.dsheirer.bits.BitSetFullException;
 import io.github.dsheirer.bits.CorrectedBinaryMessage;
-import io.github.dsheirer.edac.CRCDMR;
-import io.github.dsheirer.edac.ReedSolomon_12_9;
-import io.github.dsheirer.identifier.Identifier;
 import io.github.dsheirer.module.decode.dmr.DMRSyncPattern;
-import io.github.dsheirer.module.decode.dmr.message.data.DataMessage;
-
-import java.util.List;
-
-import static io.github.dsheirer.edac.BPTC_196_96.*;
 
 public class VoiceLCHeaderMessage extends FullLCMessage {
     /*
@@ -26,9 +16,9 @@ Full LC CRC (see note 2) Either a Reed-Solomon (12,9) FEC for header and termina
 burst, as described in clause B.3.6, or a 5 bit checksum for
 embedded signalling, as described in clause B.3.11, shall be used
      */
-    public VoiceLCHeaderMessage(DMRSyncPattern syncPattern, CorrectedBinaryMessage _message)
+    public VoiceLCHeaderMessage(DMRSyncPattern syncPattern, CorrectedBinaryMessage _message, long timestamp, int timeslot)
     {
-        super(syncPattern, _message);
+        super(syncPattern, _message, timestamp, timeslot);
     }
     @Override
     public String toString() {

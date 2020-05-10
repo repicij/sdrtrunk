@@ -1,6 +1,5 @@
 package io.github.dsheirer.module.decode.dmr.message.voice;
 
-import io.github.dsheirer.bits.BinaryMessage;
 import io.github.dsheirer.bits.CorrectedBinaryMessage;
 import io.github.dsheirer.identifier.Identifier;
 import io.github.dsheirer.module.decode.dmr.DMRSyncPattern;
@@ -19,8 +18,9 @@ public class VoiceMessage extends DMRMessage {
      * @param syncPattern
      * @param message     containing 288-bit DMR message with preliminary bit corrections indicated.
      */
-    public VoiceMessage(DMRSyncPattern syncPattern, CorrectedBinaryMessage message) {
-        super(syncPattern, message);
+    public VoiceMessage(DMRSyncPattern syncPattern, CorrectedBinaryMessage message, long timestamp, int timeslot)
+    {
+        super(syncPattern, message, timestamp, timeslot);
     }
 
     public List<byte[]> getAMBEFrames(List<byte[]> frames)

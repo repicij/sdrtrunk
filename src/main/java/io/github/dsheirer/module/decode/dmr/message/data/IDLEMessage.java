@@ -1,18 +1,14 @@
 package io.github.dsheirer.module.decode.dmr.message.data;
 
 import io.github.dsheirer.bits.CorrectedBinaryMessage;
-import io.github.dsheirer.identifier.Identifier;
 import io.github.dsheirer.module.decode.dmr.DMRSyncPattern;
-import io.github.dsheirer.module.decode.dmr.message.DMRMessage;
 import io.github.dsheirer.protocol.Protocol;
-
-import java.util.List;
 
 public class IDLEMessage extends DataMessage {
 
-    public IDLEMessage(DMRSyncPattern syncPattern, CorrectedBinaryMessage message)
+    public IDLEMessage(DMRSyncPattern syncPattern, CorrectedBinaryMessage message, long timestamp, int timeslot)
     {
-        super(syncPattern, message);
+        super(syncPattern, message, timestamp, timeslot);
     }
     @Override
     public String toString() {
