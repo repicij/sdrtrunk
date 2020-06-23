@@ -15,9 +15,9 @@
  ******************************************************************************/
 package io.github.dsheirer.bits;
 
+import io.github.dsheirer.dsp.symbol.QPSKCarrierLock;
 import io.github.dsheirer.module.decode.dmr.DMRSyncPattern;
 import io.github.dsheirer.module.decode.dmr.IDMRSyncDetectListener;
-import io.github.dsheirer.dsp.symbol.ISyncDetectListener;
 import org.apache.commons.lang3.Validate;
 
 public class DMRSoftSyncDetector implements ISyncProcessor
@@ -48,7 +48,7 @@ public class DMRSoftSyncDetector implements ISyncProcessor
         long difference = value ^ mPattern;
         if(difference == 0)
         {
-            mListener.syncDetected(0, mDMRPattern);
+            mListener.syncDetected(mDMRPattern, QPSKCarrierLock.NORMAL, 0);
             return true;
         }
         else
@@ -56,7 +56,7 @@ public class DMRSoftSyncDetector implements ISyncProcessor
             mBitErrorCount = Long.bitCount(difference);
             if(mBitErrorCount <= mThreshold)
             {
-                mListener.syncDetected(mBitErrorCount, mDMRPattern);
+                mListener.syncDetected(mDMRPattern, QPSKCarrierLock.NORMAL, mBitErrorCount);
                 return true;
             }
         }

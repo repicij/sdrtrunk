@@ -21,11 +21,15 @@
  */
 package io.github.dsheirer.gui.instrument.decoder;
 
-import io.github.dsheirer.gui.instrument.chart.*;
+import io.github.dsheirer.gui.instrument.chart.ComplexSampleLineChart;
+import io.github.dsheirer.gui.instrument.chart.DoubleLineChart;
+import io.github.dsheirer.gui.instrument.chart.EyeDiagramChart;
+import io.github.dsheirer.gui.instrument.chart.PhaseLineChart;
+import io.github.dsheirer.gui.instrument.chart.SymbolChart;
 import io.github.dsheirer.message.IMessage;
 import io.github.dsheirer.module.decode.DecoderType;
 import io.github.dsheirer.module.decode.dmr.DMRStandardDecoderInstrumented;
-import io.github.dsheirer.module.decode.p25.phase1.P25P1DecoderC4FMInstrumented;
+import io.github.dsheirer.module.decode.dmr.DecodeConfigDMR;
 import io.github.dsheirer.sample.Listener;
 import io.github.dsheirer.sample.buffer.ReusableBufferBroadcaster;
 import javafx.scene.layout.HBox;
@@ -46,7 +50,7 @@ public class DMRPane extends ComplexDecoderPane
     private DoubleLineChart mPLLFrequencyLineChart;
     private DoubleLineChart mSamplesPerSymbolLineChart;
     private ReusableBufferBroadcaster mFilteredBufferBroadcaster = new ReusableBufferBroadcaster();
-    private DMRStandardDecoderInstrumented mDecoder = new DMRStandardDecoderInstrumented();
+    private DMRStandardDecoderInstrumented mDecoder = new DMRStandardDecoderInstrumented(new DecodeConfigDMR());
 
     public DMRPane()
     {

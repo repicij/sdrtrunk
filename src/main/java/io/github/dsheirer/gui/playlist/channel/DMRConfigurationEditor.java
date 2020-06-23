@@ -22,6 +22,7 @@
 
 package io.github.dsheirer.gui.playlist.channel;
 
+import io.github.dsheirer.alias.Alias;
 import io.github.dsheirer.gui.playlist.eventlog.EventLogConfigurationEditor;
 import io.github.dsheirer.gui.playlist.record.RecordConfigurationEditor;
 import io.github.dsheirer.gui.playlist.source.FrequencyEditor;
@@ -30,9 +31,11 @@ import io.github.dsheirer.module.decode.DecoderType;
 import io.github.dsheirer.module.decode.config.AuxDecodeConfiguration;
 import io.github.dsheirer.module.decode.config.DecodeConfiguration;
 import io.github.dsheirer.module.decode.dmr.DecodeConfigDMR;
+import io.github.dsheirer.module.decode.dmr.TimeslotFrequency;
 import io.github.dsheirer.module.log.EventLogType;
 import io.github.dsheirer.module.log.config.EventLogConfiguration;
 import io.github.dsheirer.playlist.PlaylistManager;
+import io.github.dsheirer.preference.UserPreferences;
 import io.github.dsheirer.record.RecorderType;
 import io.github.dsheirer.record.config.RecordConfiguration;
 import io.github.dsheirer.source.config.SourceConfiguration;
@@ -41,8 +44,11 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.Tooltip;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import org.controlsfx.control.ToggleSwitch;
@@ -67,14 +73,15 @@ public class DMRConfigurationEditor extends ChannelConfigurationEditor
     private RecordConfigurationEditor mRecordConfigurationEditor;
     private ToggleSwitch mIgnoreDataCallsButton;
     private Spinner<Integer> mTrafficChannelPoolSizeSpinner;
+    private TableView<TimeslotFrequency> mTimeslotFrequencyTable;
 
     /**
      * Constructs an instance
      * @param playlistManager
      */
-    public DMRConfigurationEditor(PlaylistManager playlistManager)
+    public DMRConfigurationEditor(PlaylistManager playlistManager, UserPreferences userPreferences)
     {
-        super(playlistManager);
+        super(playlistManager, userPreferences);
         getTitledPanesBox().getChildren().add(getSourcePane());
         getTitledPanesBox().getChildren().add(getDecoderPane());
         getTitledPanesBox().getChildren().add(getEventLogPane());
@@ -111,21 +118,31 @@ public class DMRConfigurationEditor extends ChannelConfigurationEditor
             gridPane.setHgap(10);
             gridPane.setVgap(10);
 
+            int row = 0;
+
             Label poolSizeLabel = new Label("Max Traffic Channels");
             GridPane.setHalignment(poolSizeLabel, HPos.RIGHT);
-            GridPane.setConstraints(poolSizeLabel, 2, 0);
+            GridPane.setConstraints(poolSizeLabel, 0, row);
             gridPane.getChildren().add(poolSizeLabel);
 
-            GridPane.setConstraints(getTrafficChannelPoolSizeSpinner(), 3, 0);
+            GridPane.setConstraints(getTrafficChannelPoolSizeSpinner(), 1, row);
             gridPane.getChildren().add(getTrafficChannelPoolSizeSpinner());
 
-            GridPane.setConstraints(getIgnoreDataCallsButton(), 4, 0);
+            GridPane.setConstraints(getIgnoreDataCallsButton(), 2, row);
             gridPane.getChildren().add(getIgnoreDataCallsButton());
 
             Label directionLabel = new Label("Ignore Data Calls");
             GridPane.setHalignment(directionLabel, HPos.LEFT);
-            GridPane.setConstraints(directionLabel, 5, 0);
+            GridPane.setConstraints(directionLabel, 3, row);
             gridPane.getChildren().add(directionLabel);
+
+            Label timeslotTableLabel = new Label("MotoTRBO Timeslot Map.  Note: this is only required for MotoTRBO trunked DMR systems");
+            GridPane.setHalignment(timeslotTableLabel, HPos.LEFT);
+            GridPane.setConstraints(timeslotTableLabel, 0, ++row, 4, 1);
+            gridPane.getChildren().add(timeslotTableLabel);
+
+            GridPane.setConstraints(getTimeslotTable(), 0, ++row, 4, 1);
+            gridPane.getChildren().add(getTimeslotTable());
 
             mDecoderPane.setContent(gridPane);
         }
@@ -196,6 +213,29 @@ public class DMRConfigurationEditor extends ChannelConfigurationEditor
         return mEventLogConfigurationEditor;
     }
 
+    private TableView getTimeslotTable()
+    {
+        if(mTimeslotFrequencyTable == null)
+        {
+            mTimeslotFrequencyTable = new TableView<>();
+            mTimeslotFrequencyTable.setPrefHeight(100.0);
+
+            TableColumn numberColumn = new TableColumn("LSN");
+            numberColumn.setCellValueFactory(new PropertyValueFactory<Alias,String>("number"));
+            mTimeslotFrequencyTable.getColumns().addAll(numberColumn);
+
+            TableColumn downlinkColumn = new TableColumn("Downlink");
+            downlinkColumn.setCellValueFactory(new PropertyValueFactory<Alias,String>("downlinkFrequency"));
+            mTimeslotFrequencyTable.getColumns().addAll(downlinkColumn);
+
+            TableColumn uplinkColumn = new TableColumn("Uplink");
+            uplinkColumn.setCellValueFactory(new PropertyValueFactory<Alias,String>("uplinkFrequency"));
+            mTimeslotFrequencyTable.getColumns().addAll(uplinkColumn);
+        }
+
+        return mTimeslotFrequencyTable;
+    }
+
     private ToggleSwitch getIgnoreDataCallsButton()
     {
         if(mIgnoreDataCallsButton == null)
@@ -252,6 +292,8 @@ public class DMRConfigurationEditor extends ChannelConfigurationEditor
     {
         getIgnoreDataCallsButton().setDisable(config == null);
         getTrafficChannelPoolSizeSpinner().setDisable(config == null);
+        getTimeslotTable().getItems().clear();
+        getTimeslotTable().setDisable(config == null);
 
         if(config instanceof DecodeConfigDMR)
         {
@@ -259,6 +301,8 @@ public class DMRConfigurationEditor extends ChannelConfigurationEditor
 
             getIgnoreDataCallsButton().setSelected(decodeConfig.getIgnoreDataCalls());
             getTrafficChannelPoolSizeSpinner().getValueFactory().setValue(decodeConfig.getTrafficChannelPoolSize());
+
+            getTimeslotTable().getItems().addAll(decodeConfig.getTimeslotMap());
         }
         else
         {
@@ -283,6 +327,7 @@ public class DMRConfigurationEditor extends ChannelConfigurationEditor
 
         config.setIgnoreDataCalls(getIgnoreDataCallsButton().isSelected());
         config.setTrafficChannelPoolSize(getTrafficChannelPoolSizeSpinner().getValue());
+        config.setTimeslotMap(getTimeslotTable().getItems());
         getItem().setDecodeConfiguration(config);
     }
 

@@ -20,6 +20,7 @@ public abstract class DMRBurst extends DMRMessage
      * do not use the 24-bit prefix.
      *
      * @param message containing 288-bit DMR message with preliminary bit corrections indicated.
+     * @param timestamp of the message
      */
     public DMRBurst(DMRSyncPattern syncPattern, CorrectedBinaryMessage message, CACH cach, long timestamp, int timeslot)
     {
@@ -51,11 +52,5 @@ public abstract class DMRBurst extends DMRMessage
     public DMRSyncPattern getSyncPattern()
     {
         return mSyncPattern;
-    }
-
-    public static DMRSyncPattern getSyncType(CorrectedBinaryMessage message)
-    {
-        long syncExpected = message.getLong(SYNC_START, PAYLOAD_2_START - 1);
-        return DMRSyncPattern.fromValue(syncExpected);
     }
 }

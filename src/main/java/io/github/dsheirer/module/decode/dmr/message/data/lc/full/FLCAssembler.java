@@ -153,14 +153,23 @@ public class FLCAssembler
                 }
             }
 
-            //Extract the message
-            CorrectedBinaryMessage extractedMessage = new CorrectedBinaryMessage(88);
+            //Extract the message.  Row 1 and 2 are 11 bits.  Rows 3-7 are 10 bits.
+            CorrectedBinaryMessage extractedMessage = new CorrectedBinaryMessage(77);
+            int pointer = 0;
 
-            for(int row = 0; row < 8; row++)
+            for(int row = 0; row < 2; row++)
             {
                 for(int column = 0; column < 11; column++)
                 {
-                    extractedMessage.set(row * 11 + column, descrambled.get(row * 16 + column));
+                    extractedMessage.set(pointer++, descrambled.get(row * 16 + column));
+                }
+            }
+
+            for(int row = 2; row < 7; row++)
+            {
+                for(int column = 0; column < 10; column++)
+                {
+                    extractedMessage.set(pointer++, descrambled.get(row * 16 + column));
                 }
             }
 

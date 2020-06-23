@@ -55,7 +55,7 @@ public enum LCSS
 
     public static LCSS fromValue(int value)
     {
-        if(0 <= value && value <= 4)
+        if(0 <= value && value < 4)
         {
             return LCSS.values()[value];
         }

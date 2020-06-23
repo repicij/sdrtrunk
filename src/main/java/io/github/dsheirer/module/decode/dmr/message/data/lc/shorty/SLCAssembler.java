@@ -193,6 +193,7 @@ public class SLCAssembler
             }
 
             extractedMessage.setCorrectedBitCount(errorCount);
+            extractedMessage.setSize(28);
             ShortLCMessage slco = LCMessageFactory.createShort(extractedMessage, timestamp, 0);
 
 

@@ -317,14 +317,17 @@ public class ReedSolomon_12_9 {
         if(instance == null) {
             instance = new ReedSolomon_12_9();
         }
-        int[] code = message.toIntegerArray();
-        code[9] ^= mode;
-        code[10] ^= mode;
-        code[11] ^= mode;
-        int[] syndrome = new int[RS_12_9_POLY_MAXDEG];
-        rs_12_9_calc_syndrome(code, syndrome);
-        if(rs_12_9_check_syndrome(syndrome)) {
-            return instance.rs_12_9_correct_errors(code, syndrome);
+        if(message != null)
+        {
+            int[] code = message.toIntegerArray();
+            code[9] ^= mode;
+            code[10] ^= mode;
+            code[11] ^= mode;
+            int[] syndrome = new int[RS_12_9_POLY_MAXDEG];
+            rs_12_9_calc_syndrome(code, syndrome);
+            if(rs_12_9_check_syndrome(syndrome)) {
+                return instance.rs_12_9_correct_errors(code, syndrome);
+            }
         }
         return 2;
     }

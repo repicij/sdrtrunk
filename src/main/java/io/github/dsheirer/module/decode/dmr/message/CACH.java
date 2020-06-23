@@ -23,6 +23,7 @@ public class CACH
     public enum AccessType {IDLE, BUSY};
 
     private CorrectedBinaryMessage mMessage;
+    private boolean mValid = true;  //TODO: check FEC on cach bits to verify cach is valid
 
     /**
      * Constructs an instance.  Note: constructor is private.  Use the getCACH() method to extract a CACH from a
@@ -30,7 +31,7 @@ public class CACH
      *
      * @param message containing the deinterleaved and error corrected CACH binary message
      */
-    private CACH(CorrectedBinaryMessage message)
+    public CACH(CorrectedBinaryMessage message)
     {
         mMessage = message;
     }
@@ -42,6 +43,15 @@ public class CACH
         sb.append(getLCSS());
         sb.append(" ").append(getPayload().toHexString());
         return sb.toString();
+    }
+
+    /**
+     * Indicates if this cach passes the FEC error correction and indicates that the inbound channel Access Type,
+     * Timeslot and LCSS information is valid.
+     */
+    public boolean isValid()
+    {
+        return mValid;
     }
 
      /**
@@ -73,6 +83,14 @@ public class CACH
     public int getTimeslot()
     {
         return mMessage.get(OUTBOUND_BURST_TIMESLOT) ? 1 : 0;
+    }
+
+    /**
+     * Indicates if the timeslot is 0
+     */
+    public boolean isTimeslot0()
+    {
+        return !mMessage.get(OUTBOUND_BURST_TIMESLOT);
     }
 
     /**

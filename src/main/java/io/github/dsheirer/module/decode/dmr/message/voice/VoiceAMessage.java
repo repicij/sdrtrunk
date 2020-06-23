@@ -29,7 +29,7 @@ public class VoiceAMessage extends VoiceMessage
     public String toString()
     {
         StringBuilder sb = new StringBuilder();
-        sb.append("     ").append(getSyncPattern()).append(" A");
+        sb.append("     ").append(getSyncPattern());
         return sb.toString();
     }
 

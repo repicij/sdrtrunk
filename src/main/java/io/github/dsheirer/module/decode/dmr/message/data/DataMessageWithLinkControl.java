@@ -26,6 +26,7 @@ import io.github.dsheirer.module.decode.dmr.message.CACH;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.LCMessage;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.LCMessageFactory;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -76,6 +77,11 @@ public abstract class DataMessageWithLinkControl extends DataMessage
     @Override
     public List<Identifier> getIdentifiers()
     {
-        return getLCMessage().getIdentifiers();
+        if(getLCMessage() != null)
+        {
+            return getLCMessage().getIdentifiers();
+        }
+
+        return Collections.emptyList();
     }
 }

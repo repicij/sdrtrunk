@@ -15,24 +15,20 @@
  ******************************************************************************/
 package io.github.dsheirer.module.decode.dmr;
 
-import io.github.dsheirer.dsp.symbol.ISyncDetectListener;
+import io.github.dsheirer.dsp.symbol.QPSKCarrierLock;
 
 /**
- * Listener interface to be notified each time a sync pattern has been detected and/or when the sync
- * has been lost.
+ * Listener interface to be notified each time a sync pattern has been detected
  */
-public interface IDMRSyncDetectListener extends ISyncDetectListener
+public interface IDMRSyncDetectListener
 {
     /**
      * Indicates that a sync pattern has been detected.
      *
+     * @param pattern detected
+     * @param carrier lock indication that conveys any PLL lock correction action that may be necessary.
      * @param bitErrors count for soft sync matching to indicate the number of bit positions
      * of the sequence that didn't fully match the sync pattern
      */
-    void syncDetected(int bitErrors, DMRSyncPattern pattern);
-
-    /**
-     * Indicates that sync has been lost
-     */
-    void syncLost(int Processed);
+    void syncDetected(DMRSyncPattern pattern, QPSKCarrierLock carrierLock, int bitErrors);
 }
