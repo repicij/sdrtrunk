@@ -23,50 +23,41 @@ import java.util.EnumSet;
 
 public enum DMRSyncPattern
 {
-    BASE_STATION_VOICE(0x755FD7DF75F7l, "BS VOICE"),
-    BASE_STATION_VOICE_P90(0xEFFABEBAEFAEl, "BS VOICE CW90"),
-    BASE_STATION_VOICE_N90(0x100541451051l, "BS VOICE CCW90"),
-    BASE_STATION_VOICE_180(0x8AA028208A08l, "BS VOICE 180"),
+    BASE_STATION_DATA(0xDFF57D75DF5Dl, 0xBAAFEBEFBAFBl, 0x455014104504l, 0x200A828A20A2l, "BS DATA"),
+    BASE_STATION_VOICE(0x755FD7DF75F7l, 0xEFFABEBAEFAEl, 0x100541451051l, 0x8AA028208A08l, "BS VOIC"),
 
-    BASE_STATION_DATA(0xDFF57D75DF5Dl, "BS DATA"),
-    BASE_STATION_DATA_P90(0xBAAFEBEFBAFBl, "BS DATA CW90"),
-    BASE_STATION_DATA_N90(0x455014104504l, "BS DATA CCW90"),
-    BASE_STATION_DATA_180(0x200A828A20A2l, "BS DATA 180"),
+    MOBILE_STATION_DATA(0xD5D7F77FD757l, 0xBFBEAEEABEFEl, 0x404151154101l, 0x2A28088028A8l, "MS DATA"),
+    MOBILE_STATION_VOICE(0x7F7D5DD57DFDl, 0xEAEBFBBFEBABl, 0x151404401454l, 0x8082A22A8202l, "MS VOIC"),
+    DIRECT_MODE_DATA_TIMESLOT_0(0xF7FDD5DDFD55l, 0xAEABBFBBABFFl, 0x515440445400l, 0x08022A2202AAl, "DM DAT0"),
+    DIRECT_MODE_DATA_TIMESLOT_1(0xD7557F5FF7F5l, 0xBEFFEAFAAEAFl, 0x410015055150l, 0x28AA80A0080Al, "DM DAT1"),
+    DIRECT_MODE_VOICE_TIMESLOT_0(0x5D577F7757FFl, 0xFBFEEAEEFEAAl, 0x040115110155l, 0xA2A88088A800l, "DM VOX0"),
+    DIRECT_MODE_VOICE_TIMESLOT_1(0x7DFFD5F55D5Fl, 0xEBAABFAFFBFAl, 0x145540500405l, 0x82002A0AA2A0l, "DM VOX1"),
+    MOBILE_STATION_REVERSE_CHANNEL(0x77D55F7DFD77l, 0xEEBFFAEBABEEl, 0x114005145411l, 0x882AA0820288l, "MS RVRS"),
 
-    MOBILE_STATION_VOICE(0x7F7D5DD57DFDl, "MS VOICE"),
-    MOBILE_STATION_VOICE_P90(0xEAEBFBBFEBABl, "MS VOICE CW90"),
-    MOBILE_STATION_VOICE_N90(0x151404401454l, "MS VOICE CCW90"),
-    MOBILE_STATION_VOICE_180(0x8082A22A8202l, "MS VOICE 180"),
-
-    MOBILE_STATION_DATA(0xD5D7F77FD757l, "MS DATA"),
-    MOBILE_STATION_DATA_P90(0xBFBEAEEABEFEl, "MS DATA CW90"),
-    MOBILE_STATION_DATA_N90(0x404151154101l, "MS DATA CCW90"),
-    MOBILE_STATION_DATA_180(0x2A28088028A8l, "MS DATA 180"),
-
-
-    MOBILE_STATION_REVERSE_CHANNEL(0x77D55F7DFD77l, "MS REVERSE"),
-    DIRECT_MODE_DATA_TIMESLOT_1(0xF7FDD5DDFD55l, "DM DATA TS1"),
-    DIRECT_MODE_DATA_TIMESLOT_2(0xD7557F5FF7F5l, "DM DATA TS2"),
-    DIRECT_MODE_VOICE_TIMESLOT_1(0x5D577F7757FFl, "DM VOICE TS1"),
-    DIRECT_MODE_VOICE_TIMESLOT_2(0x7DFFD5F55D5Fl, "DM VOICE TS2"),
-
-    RESERVED(0xDD7FF5D757DDl, "RESERVED"),
-
-    P25_PHASE1_ERROR_90_CCW( 0x96b07fdfe318l, "" ),//96b07fdfe318, 5ac1ff7f8c61, bcd0958e2b48
-    P25_PHASE1_ERROR_90_CW(  0x001050551155l,"" ),
-    P25_PHASE1_ERROR_180(    0xAA8A0A008800l,"" ),
+    RESERVED(0xDD7FF5D757DDl, 0xBBEAAFBEFEBBl, 0x441550410144l, 0x22800A28A822l, "RESERVED"),
 
     //These are used to identify the sync-less sub frames of the voice super frame
-    VOICE_FRAME_B(-2, "VOICE B"),
-    VOICE_FRAME_C(-3, "VOICE C"),
-    VOICE_FRAME_D(-4, "VOICE D"),
-    VOICE_FRAME_E(-5, "VOICE E"),
-    VOICE_FRAME_F(-6, "VOICE F"),
+    VOICE_FRAME_B(-2, 0,0,0, "VOICE B"),
+    VOICE_FRAME_C(-3, 0, 0, 0,"VOICE C"),
+    VOICE_FRAME_D(-4, 0,0,0,"VOICE D"),
+    VOICE_FRAME_E(-5, 0,0,0,"VOICE E"),
+    VOICE_FRAME_F(-6, 0,0,0,"VOICE F"),
 
-    UNKNOWN(-1, "UNKNOWN");
+    UNKNOWN(-1, 0, 0, 0, "UNKNOWN");
 
     private long mPattern;
+    private long mPlus90Pattern;
+    private long mMinus90Pattern;
+    private long mInvertedPattern;
     private String mLabel;
+
+    //Base Station sync patterns
+    public static final EnumSet<DMRSyncPattern> BASE_STATION_SYNC_PATTERNS = EnumSet.of(BASE_STATION_DATA, BASE_STATION_VOICE);
+
+    //Mobile Subscriber sync patterns
+    public static final EnumSet<DMRSyncPattern> MOBILE_SUBSCRIBER_SYNC_PATTERNS = EnumSet.of(MOBILE_STATION_DATA,
+            MOBILE_STATION_VOICE, DIRECT_MODE_DATA_TIMESLOT_0, DIRECT_MODE_DATA_TIMESLOT_1,
+            DIRECT_MODE_VOICE_TIMESLOT_0, DIRECT_MODE_VOICE_TIMESLOT_1, MOBILE_STATION_REVERSE_CHANNEL);
 
     //Valid sync patterns (excluding the sync-less voice patterns)
     public static final EnumSet<DMRSyncPattern> SYNC_PATTERNS = EnumSet.range(BASE_STATION_VOICE, RESERVED);
@@ -84,9 +75,12 @@ public enum DMRSyncPattern
     /**
      * DMR Sync Patterns.  See TS 102-361-1, paragraph 9.1.1
      */
-    DMRSyncPattern(long pattern, String label)
+    DMRSyncPattern(long pattern, long plus90Pattern, long minus90Pattern, long invertedPattern, String label)
     {
         mPattern = pattern;
+        mPlus90Pattern = plus90Pattern;
+        mMinus90Pattern = minus90Pattern;
+        mInvertedPattern = invertedPattern;
         mLabel = label;
     }
 
@@ -97,6 +91,31 @@ public enum DMRSyncPattern
     {
         return mPattern;
     }
+
+    /**
+     * Pattern that represents the PLL locking to the carrier misaligned by plus 90 degrees.
+     */
+    public long getPlus90Pattern()
+    {
+        return mPlus90Pattern;
+    }
+
+    /**
+     * Pattern that represents the PLL locking to the carrier misaligned by minus 90 degrees.
+     */
+    public long getMinus90Pattern()
+    {
+        return mMinus90Pattern;
+    }
+
+    /**
+     * Pattern that represents the PLL locking to the carrier misaligned by 180 degrees (inverted).
+     */
+    public long getInvertedPattern()
+    {
+        return mInvertedPattern;
+    }
+
 
     /**
      * String representation of the sync pattern
@@ -132,13 +151,15 @@ public enum DMRSyncPattern
 
     /**
      * Lookup the DMR Sync Pattern from the transmitted value.
+     *
      * @param value to match to a pattern
      * @return the matching enum entry or UNKNOWN
      */
     public static DMRSyncPattern fromValue(long value)
     {
-        if(value < 0) {
-            for(DMRSyncPattern pattern: VOICE_PATTERNS)
+        if(value < 0)
+        {
+            for(DMRSyncPattern pattern : VOICE_PATTERNS)
             {
                 if(pattern.getPattern() == value)
                 {
@@ -147,7 +168,7 @@ public enum DMRSyncPattern
             }
             return UNKNOWN;
         }
-        for(DMRSyncPattern pattern: SYNC_PATTERNS)
+        for(DMRSyncPattern pattern : SYNC_PATTERNS)
         {
             if(pattern.getPattern() == value)
             {

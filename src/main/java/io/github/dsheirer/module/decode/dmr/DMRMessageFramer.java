@@ -396,8 +396,8 @@ public class DMRMessageFramer implements Listener<Dibit>, IDMRBurstDetectListene
     public static void main(String[] args)
     {
 //        String file = "/home/denny/SDRTrunk/recordings/20200513_143340_9600BPS_DMR_SaiaNet_Onondaga_Control.bits";
-        String path = "/home/denny/SDRTrunk/recordings/";
-        String file = path + "20200514_133947_9600BPS_DMR_SaiaNet_Onondaga_LCN_4.bits";
+        String path = "C:\\Users\\Denny\\SDRTrunk\\recordings\\";
+        String file = path + "20200620_123736_9600BPS_DMR_OneVoice_Network_Columbia_Control.bits";
 
         boolean multi = false;
 

@@ -46,6 +46,11 @@ public class LCMessageFactory
      */
     public static FullLCMessage createFull(CorrectedBinaryMessage message, long timestamp, int timeslot)
     {
+        if(message == null)
+        {
+            throw new IllegalArgumentException("Message cannot be null");
+        }
+
         int errorCount = ReedSolomon_12_9.checkReedSolomon(message, 0, 72, 0x96);
         message.setCorrectedBitCount(message.getCorrectedBitCount() + errorCount);
         LCOpcode opcode = FullLCMessage.getOpcode(message);

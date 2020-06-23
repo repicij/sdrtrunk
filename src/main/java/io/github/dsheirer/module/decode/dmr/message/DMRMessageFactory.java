@@ -29,8 +29,8 @@ public class DMRMessageFactory
         {
             case BASE_STATION_VOICE:
             case MOBILE_STATION_VOICE:
+            case DIRECT_MODE_VOICE_TIMESLOT_0:
             case DIRECT_MODE_VOICE_TIMESLOT_1:
-            case DIRECT_MODE_VOICE_TIMESLOT_2:
             case VOICE_FRAME_B:
             case VOICE_FRAME_C:
             case VOICE_FRAME_D:
@@ -39,8 +39,8 @@ public class DMRMessageFactory
                 return createVoiceMessage(syncPattern, binaryMessage, cach, timestamp, timeslot);
             case BASE_STATION_DATA:
             case MOBILE_STATION_DATA:
+            case DIRECT_MODE_DATA_TIMESLOT_0:
             case DIRECT_MODE_DATA_TIMESLOT_1:
-            case DIRECT_MODE_DATA_TIMESLOT_2:
                 return DataMessageFactory.create(syncPattern, binaryMessage, cach, timestamp, timeslot);
             case MOBILE_STATION_REVERSE_CHANNEL:
             case RESERVED:
@@ -66,8 +66,8 @@ public class DMRMessageFactory
         {
             case BASE_STATION_VOICE:
             case MOBILE_STATION_VOICE:
+            case DIRECT_MODE_VOICE_TIMESLOT_0:
             case DIRECT_MODE_VOICE_TIMESLOT_1:
-            case DIRECT_MODE_VOICE_TIMESLOT_2:
                 return new VoiceAMessage(syncPattern, message, cach, timestamp, timeslot);
             case VOICE_FRAME_B:
             case VOICE_FRAME_C:

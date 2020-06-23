@@ -394,7 +394,6 @@ public class RadioReferenceDecoder
                         return DecoderType.P25_PHASE1;
                     }
                     break;
-                case "DMR":
                 case "NXDN":
 
                 case "EDACS":

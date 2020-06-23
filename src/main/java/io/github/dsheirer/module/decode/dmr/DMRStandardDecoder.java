@@ -20,7 +20,6 @@
 package io.github.dsheirer.module.decode.dmr;
 
 import io.github.dsheirer.dsp.filter.FilterFactory;
-import io.github.dsheirer.dsp.filter.fir.FIRFilterSpecification;
 import io.github.dsheirer.dsp.filter.fir.complex.ComplexFIRFilter2;
 import io.github.dsheirer.dsp.gain.ComplexFeedForwardGainControl;
 import io.github.dsheirer.dsp.psk.DQPSKDecisionDirectedDemodulator;
@@ -130,25 +129,32 @@ public class DMRStandardDecoder extends DMRDecoder
 
         if(filter == null)
         {
-            FIRFilterSpecification specification = FIRFilterSpecification.lowPassBuilder()
-                    .sampleRate((int)getSampleRate())
-                    .passBandCutoff(4500)
-                    .passBandAmplitude(1.0)
-                    .passBandRipple(0.1)
-                    .stopBandAmplitude(0.0)
-                    .stopBandStart(7000)
-                    .stopBandRipple(0.01)
-                    .build();
+            double sampleRate = getSampleRate();
+            int symbolRate = 4800;
+            double samplesPerSymbol = sampleRate / symbolRate / 2;
+            float alpha = 0.25f;
+            int filterSymbolCount = 20;
+            filter = FilterFactory.getRootRaisedCosine(samplesPerSymbol, filterSymbolCount, alpha);
 
-            try
-            {
-                filter = FilterFactory.getTaps(specification);//
-                //filter = FilterFactory.getRootRaisedCosine((int)getSamplesPerSymbol(), 10, 0.3f);////
-            }
-            catch(Exception fde) //FilterDesignException
-            {
-                mLog.error("Couldn't design low pass baseband filter for sample rate: " + getSampleRate());
-            }
+//            FIRFilterSpecification specification = FIRFilterSpecification.lowPassBuilder()
+//                    .sampleRate((int)getSampleRate())
+//                    .passBandCutoff(4500)
+//                    .passBandAmplitude(1.0)
+//                    .passBandRipple(0.1)
+//                    .stopBandAmplitude(0.0)
+//                    .stopBandStart(7000)
+//                    .stopBandRipple(0.01)
+//                    .build();
+//
+//            try
+//            {
+//                filter = FilterFactory.getTaps(specification);//
+//                //filter = FilterFactory.getRootRaisedCosine((int)getSamplesPerSymbol(), 10, 0.3f);////
+//            }
+//            catch(Exception fde) //FilterDesignException
+//            {
+//                mLog.error("Couldn't design low pass baseband filter for sample rate: " + getSampleRate());
+//            }
 
             if(filter != null)
             {

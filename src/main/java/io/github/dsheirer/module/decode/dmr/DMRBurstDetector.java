@@ -96,15 +96,6 @@ public class DMRBurstDetector implements Listener<Dibit>, IDMRSyncDetectListener
             mDibitsProcessed -= 4800;
         }
         mSyncDetector.receive(mSyncDelayBuffer.getAndPut(dibit));
-        /*
-        Dibit dibit = mSymbolEvaluator.getSymbolDecision();
-        if(dibit == Dibit.D01_PLUS_3){
-            System.out.print("1");
-        }
-        else if(dibit == Dibit.D11_MINUS_3) {
-            System.out.print("3");
-        }
-         */
     }
     private void parseBurst(int bitErrorCount, DMRSyncPattern pattern) {
         if (bitErrorCount <= MAXIMUM_SYNC_MATCH_BIT_ERRORS) {
