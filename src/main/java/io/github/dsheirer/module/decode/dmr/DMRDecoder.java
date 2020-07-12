@@ -2,11 +2,8 @@ package io.github.dsheirer.module.decode.dmr;
 
 import io.github.dsheirer.dsp.symbol.Dibit;
 import io.github.dsheirer.dsp.symbol.DibitToByteBufferAssembler;
-import io.github.dsheirer.module.decode.Decoder;
 import io.github.dsheirer.module.decode.DecoderType;
 import io.github.dsheirer.module.decode.FeedbackDecoder;
-import io.github.dsheirer.module.decode.p25.phase1.P25P1Decoder;
-import io.github.dsheirer.module.decode.p25.phase1.P25P1MessageProcessor;
 import io.github.dsheirer.sample.Broadcaster;
 import io.github.dsheirer.sample.Listener;
 import io.github.dsheirer.sample.buffer.IReusableByteBufferProvider;
@@ -26,10 +23,10 @@ public abstract class DMRDecoder extends FeedbackDecoder implements ISourceEvent
     private Listener<SourceEvent> mSourceEventListener;
     private double mSymbolRate;
 
-    public DMRDecoder(double symbolRate)
+    public DMRDecoder(DecodeConfigDMR config)
     {
-        mSymbolRate = symbolRate;
-        mMessageProcessor = new DMRMessageProcessor();
+        mSymbolRate = 4800.0;
+        mMessageProcessor = new DMRMessageProcessor(config);
         mMessageProcessor.setMessageListener(getMessageListener());
         getDibitBroadcaster().addListener(mByteBufferAssembler);
     }

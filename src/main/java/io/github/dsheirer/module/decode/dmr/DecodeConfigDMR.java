@@ -25,6 +25,9 @@ import io.github.dsheirer.module.decode.DecoderType;
 import io.github.dsheirer.module.decode.config.DecodeConfiguration;
 import io.github.dsheirer.source.tuner.channel.ChannelSpecification;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * DMR Decoder Configuration
  */
@@ -32,9 +35,14 @@ public class DecodeConfigDMR extends DecodeConfiguration
 {
     private int mTrafficChannelPoolSize = TRAFFIC_CHANNEL_LIMIT_DEFAULT;
     private boolean mIgnoreDataCalls = true;
+    private List<TimeslotFrequency> mTimeslotMap = new ArrayList<>();
 
     public DecodeConfigDMR()
     {
+        TimeslotFrequency timeslotFrequency = new TimeslotFrequency();
+        timeslotFrequency.setNumber(1);
+        timeslotFrequency.setDownlinkFrequency(123456000l);
+        mTimeslotMap.add(timeslotFrequency);
     }
 
     /**
@@ -91,5 +99,34 @@ public class DecodeConfigDMR extends DecodeConfiguration
     public ChannelSpecification getChannelSpecification()
     {
         return new ChannelSpecification(50000.0, 12500, 5750.0, 6500.0);
+    }
+
+    /**
+     * Timeslot map for this decode configuration.
+     *
+     * Note: this is only used for MotoTRBO systems
+     */
+    @JacksonXmlProperty(isAttribute = false, localName = "timeslot")
+    public List<TimeslotFrequency> getTimeslotMap()
+    {
+        return mTimeslotMap;
+    }
+
+    /**
+     * Sets the timeslot map
+     * @param timeslots for a MotoTRBO system
+     */
+    public void setTimeslotMap(List<TimeslotFrequency> timeslots)
+    {
+        mTimeslotMap = timeslots;
+    }
+
+    /**
+     * Adds a timeslot frequency to the map
+     */
+    @JsonIgnore
+    public void addTimeslotFrequency(TimeslotFrequency timeslotFrequency)
+    {
+        mTimeslotMap.add(timeslotFrequency);
     }
 }

@@ -30,6 +30,7 @@ import io.github.dsheirer.module.decode.dmr.message.data.lc.full.UnknownFullLCMe
 import io.github.dsheirer.module.decode.dmr.message.data.lc.shorty.ActivityUpdateMessage;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.shorty.ConnectPlusControlChannel;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.shorty.ConnectPlusTrafficChannel;
+import io.github.dsheirer.module.decode.dmr.message.data.lc.shorty.ControlChannelSystemParameters;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.shorty.NullMessage;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.shorty.ShortLCMessage;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.shorty.UnknownShortLCMessage;
@@ -103,6 +104,8 @@ public class LCMessageFactory
                 slc = new ConnectPlusTrafficChannel(message, timestamp, timeslot);
                 break;
             case SHORT_STANDARD_CONTROL_CHANNEL_SYSTEM_PARAMETERS:
+                slc = new ControlChannelSystemParameters(message, timestamp, timeslot);
+                break;
             case SHORT_STANDARD_TRAFFIC_CHANNEL_SYSTEM_PARAMETERS:
             case SHORT_STANDARD_UNKNOWN:
             default:

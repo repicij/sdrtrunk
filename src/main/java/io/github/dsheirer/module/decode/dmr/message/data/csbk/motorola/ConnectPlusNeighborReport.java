@@ -72,7 +72,7 @@ public class ConnectPlusNeighborReport extends CSBKMessage
         sb.append("CC:").append(getSlotType().getColorCode());
         sb.append(" CSBK ").append(getVendor());
         sb.append(" NEIGHBORS: ").append(Joiner.on(",").join(getNeighbors()));
-        sb.append(" UNKNOWN FIELD:").append(getUnknownField());
+        sb.append(" UNK:").append(getUnknownField());
 
         return sb.toString();
     }

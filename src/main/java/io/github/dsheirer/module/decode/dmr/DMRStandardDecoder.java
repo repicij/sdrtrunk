@@ -20,6 +20,7 @@
 package io.github.dsheirer.module.decode.dmr;
 
 import io.github.dsheirer.dsp.filter.FilterFactory;
+import io.github.dsheirer.dsp.filter.fir.FIRFilterSpecification;
 import io.github.dsheirer.dsp.filter.fir.complex.ComplexFIRFilter2;
 import io.github.dsheirer.dsp.gain.ComplexFeedForwardGainControl;
 import io.github.dsheirer.dsp.psk.DQPSKDecisionDirectedDemodulator;
@@ -27,7 +28,8 @@ import io.github.dsheirer.dsp.psk.InterpolatingSampleBuffer;
 import io.github.dsheirer.dsp.psk.pll.CostasLoop;
 import io.github.dsheirer.dsp.psk.pll.FrequencyCorrectionSyncMonitor;
 import io.github.dsheirer.dsp.psk.pll.PLLBandwidth;
-import io.github.dsheirer.module.decode.DecoderType;
+import io.github.dsheirer.message.IMessage;
+import io.github.dsheirer.sample.Listener;
 import io.github.dsheirer.sample.buffer.ReusableComplexBuffer;
 import io.github.dsheirer.source.SourceEvent;
 import io.github.dsheirer.source.wave.ComplexWaveSource;
@@ -56,9 +58,9 @@ public class DMRStandardDecoder extends DMRDecoder
     /**
      * DMR Standard
      */
-    public DMRStandardDecoder()
+    public DMRStandardDecoder(DecodeConfigDMR config)
     {
-        super(4800.0);
+        super(config);
         setSampleRate(25000.0);
     }
 
@@ -81,10 +83,9 @@ public class DMRStandardDecoder extends DMRDecoder
 
         //The Costas Loop receives symbol-inversion correction requests when detected.
         //The PLL gain monitor receives sync detect/loss signals from the message framer
-        mMessageFramer = new DMRMessageFramer(mCostasLoop, DecoderType.DMR.getProtocol().getBitRate());
+        mMessageFramer = new DMRMessageFramer(mCostasLoop);
         mMessageFramer.setSyncDetectListener(mFrequencyCorrectionSyncMonitor);
         mMessageFramer.setListener(getMessageProcessor());
-        mMessageFramer.setSampleRate(sampleRate);
 
         mQPSKDemodulator.setSymbolListener(getDibitBroadcaster());
         getDibitBroadcaster().addListener(mMessageFramer);
@@ -134,7 +135,6 @@ public class DMRStandardDecoder extends DMRDecoder
             double samplesPerSymbol = sampleRate / symbolRate / 2;
             float alpha = 0.25f;
             int filterSymbolCount = 20;
-            filter = FilterFactory.getRootRaisedCosine(samplesPerSymbol, filterSymbolCount, alpha);
 
 //            FIRFilterSpecification specification = FIRFilterSpecification.lowPassBuilder()
 //                    .sampleRate((int)getSampleRate())
@@ -145,16 +145,26 @@ public class DMRStandardDecoder extends DMRDecoder
 //                    .stopBandStart(7000)
 //                    .stopBandRipple(0.01)
 //                    .build();
-//
-//            try
-//            {
-//                filter = FilterFactory.getTaps(specification);//
-//                //filter = FilterFactory.getRootRaisedCosine((int)getSamplesPerSymbol(), 10, 0.3f);////
-//            }
-//            catch(Exception fde) //FilterDesignException
-//            {
-//                mLog.error("Couldn't design low pass baseband filter for sample rate: " + getSampleRate());
-//            }
+
+            FIRFilterSpecification specification = FIRFilterSpecification.lowPassBuilder()
+                .sampleRate((int)getSampleRate())
+                .passBandCutoff(5100)
+                .passBandAmplitude(1.0)
+                .passBandRipple(0.01)
+                .stopBandAmplitude(0.0)
+                .stopBandStart(6500)
+                .stopBandRipple(0.01)
+                .build();
+
+            try
+            {
+                filter = FilterFactory.getTaps(specification);//
+//                filter = FilterFactory.getRootRaisedCosine(samplesPerSymbol, filterSymbolCount, alpha);
+            }
+            catch(Exception fde) //FilterDesignException
+            {
+                mLog.error("Couldn't design low pass baseband filter for sample rate: " + getSampleRate());
+            }
 
             if(filter != null)
             {
@@ -162,7 +172,7 @@ public class DMRStandardDecoder extends DMRDecoder
             }
             else
             {
-                throw new IllegalStateException("Couldn't design a C4FM baseband filter for sample rate: " + getSampleRate());
+                throw new IllegalStateException("Couldn't design a DMR baseband filter for sample rate: " + getSampleRate());
             }
         }
 
@@ -177,41 +187,6 @@ public class DMRStandardDecoder extends DMRDecoder
         mBasebandFilter = null;
 
         mMessageFramer = null;
-    }
-    public static void main(String[] args)
-    {
-        String path = "/Users/maozhenyu/Downloads/SDR/";
-        String input = "test.wav";
-        String output = "19240";
-
-
-        DMRStandardDecoder decoder = new DMRStandardDecoder();
-        //BinaryRecorder recorder = new BinaryRecorder(Path.of(path), output, Protocol.DMR);
-        //decoder.setBufferListener(recorder.getReusableByteBufferListener());
-        //recorder.start();
-
-        File file = new File(path + input);
-
-        boolean running = true;
-
-        try(ComplexWaveSource source = new ComplexWaveSource(file))
-        {
-            decoder.setSampleRate(50000.0);
-            source.setListener(decoder);
-            source.start();
-
-            while(running)
-            {
-                source.next(200, true);
-            }
-        }
-        catch(IOException e)
-        {
-            mLog.error("Error", e);
-            running = false;
-        }
-
-        //recorder.stop();
     }
     @Override
     protected void process(SourceEvent sourceEvent)
@@ -245,5 +220,48 @@ public class DMRStandardDecoder extends DMRDecoder
     {
         mCostasLoop.reset();
         mFrequencyCorrectionSyncMonitor.reset();
+    }
+
+    public static void main(String[] args)
+    {
+        String path = "/home/denny/SDRTrunk/recordings/";
+        String input = "SaiaNet_Onondaga_Test_With_FM_baseband_20200628_092056.wav";
+
+        DMRStandardDecoder decoder = new DMRStandardDecoder(new DecodeConfigDMR());
+        decoder.setMessageListener(new Listener<IMessage>()
+        {
+            @Override
+            public void receive(IMessage message)
+            {
+                try
+                {
+                    mLog.info(message.toString());
+                }
+                catch(Throwable t)
+                {
+                    mLog.error("Error", t);
+                }
+            }
+        });
+        File file = new File(path + input);
+
+        boolean running = true;
+
+        try(ComplexWaveSource source = new ComplexWaveSource(file))
+        {
+            decoder.setSampleRate(50000.0);
+            source.setListener(decoder);
+            source.start();
+
+            while(running)
+            {
+                source.next(200, true);
+            }
+        }
+        catch(IOException e)
+        {
+            mLog.error("Error", e);
+            running = false;
+        }
     }
 }

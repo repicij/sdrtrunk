@@ -22,17 +22,20 @@ package io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola;
 import io.github.dsheirer.bits.CorrectedBinaryMessage;
 import io.github.dsheirer.identifier.Identifier;
 import io.github.dsheirer.module.decode.dmr.DMRSyncPattern;
+import io.github.dsheirer.module.decode.dmr.TimeslotFrequency;
+import io.github.dsheirer.module.decode.dmr.channel.DMRTimeslotFrequencyChannel;
+import io.github.dsheirer.module.decode.dmr.channel.ITimeslotFrequencyReceiver;
 import io.github.dsheirer.module.decode.dmr.message.CACH;
 import io.github.dsheirer.module.decode.dmr.message.data.SlotType;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.CSBKMessage;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Motorola Connect Plus - Unknown: Opcode 28
+ * Motorola Connect Plus - Channel Active
  */
-public class ConnectPlusUnknownOpcode28 extends CSBKMessage
+public class ConnectPlusChannelActive extends CSBKMessage implements ITimeslotFrequencyReceiver
 {
     private static final int[] SOURCE_ADDRESS = new int[]{16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
         32, 33, 34, 35, 36, 37, 38, 39};
@@ -40,6 +43,9 @@ public class ConnectPlusUnknownOpcode28 extends CSBKMessage
         56, 57, 58, 59, 60, 61, 62, 63};
     private static final int[] LSN = new int[]{64, 65, 66, 67, 68};
     private static final int[] COLOR_CODE = new int[]{72, 73, 74, 75, 76, 77, 78, 79};
+
+    private DMRTimeslotFrequencyChannel mDMRTimeslotFrequencyChannel;
+    private List<Identifier> mIdentifiers;
 
     /**
      * Constructs an instance
@@ -51,9 +57,52 @@ public class ConnectPlusUnknownOpcode28 extends CSBKMessage
      * @param timestamp
      * @param timeslot
      */
-    public ConnectPlusUnknownOpcode28(DMRSyncPattern syncPattern, CorrectedBinaryMessage message, CACH cach, SlotType slotType, long timestamp, int timeslot)
+    public ConnectPlusChannelActive(DMRSyncPattern syncPattern, CorrectedBinaryMessage message, CACH cach, SlotType slotType, long timestamp, int timeslot)
     {
         super(syncPattern, message, cach, slotType, timestamp, timeslot);
+    }
+
+    /**
+     * Logical slot number
+     */
+    public int getLogicalSlotNumber()
+    {
+        return getMessage().getInt(LSN) - 1;
+    }
+
+    /**
+     * DMR Channel
+     */
+    public DMRTimeslotFrequencyChannel getDMRTimeslotFrequencyChannel()
+    {
+        if(mDMRTimeslotFrequencyChannel == null)
+        {
+            mDMRTimeslotFrequencyChannel = new DMRTimeslotFrequencyChannel(getLogicalSlotNumber());
+        }
+
+        return mDMRTimeslotFrequencyChannel;
+    }
+
+    @Override
+    public int[] getLogicalTimeslotNumbers()
+    {
+        return getDMRTimeslotFrequencyChannel().getLSNArray();
+    }
+
+    /**
+     * Assigns a timeslot frequency map for the DMR channel
+     * @param timeslotFrequencies that match the logical timeslots
+     */
+    @Override
+    public void apply(List<TimeslotFrequency> timeslotFrequencies)
+    {
+        for(TimeslotFrequency timeslotFrequency: timeslotFrequencies)
+        {
+            if(timeslotFrequency.getNumber() == getDMRTimeslotFrequencyChannel().getLogicalSlotNumber())
+            {
+                getDMRTimeslotFrequencyChannel().setTimeslotFrequency(timeslotFrequency);
+            }
+        }
     }
 
     @Override
@@ -68,7 +117,8 @@ public class ConnectPlusUnknownOpcode28 extends CSBKMessage
 
         sb.append("CC:").append(getSlotType().getColorCode());
         sb.append(" CSBK ").append(getVendor());
-        sb.append(" UNKNOWN-OPCODE-28");
+        sb.append(" CHANNEL ACTIVE ");
+        sb.append(getDMRTimeslotFrequencyChannel());
         sb.append(" MSG:").append(getMessage().toHexString());
         return sb.toString();
     }
@@ -77,6 +127,12 @@ public class ConnectPlusUnknownOpcode28 extends CSBKMessage
     @Override
     public List<Identifier> getIdentifiers()
     {
-        return Collections.emptyList();
+        if(mIdentifiers == null)
+        {
+            mIdentifiers = new ArrayList<>();
+            mIdentifiers.add(getDMRTimeslotFrequencyChannel());
+        }
+
+        return mIdentifiers;
     }
 }

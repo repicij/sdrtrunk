@@ -22,7 +22,6 @@ package io.github.dsheirer.module.decode.dmr;
 import io.github.dsheirer.dsp.psk.DQPSKDecisionDirectedDemodulatorInstrumented;
 import io.github.dsheirer.dsp.psk.InterpolatingSampleBufferInstrumented;
 import io.github.dsheirer.dsp.psk.SymbolDecisionData;
-import io.github.dsheirer.module.decode.p25.phase1.P25P1DecoderC4FM;
 import io.github.dsheirer.sample.Listener;
 import io.github.dsheirer.sample.buffer.ReusableComplexBuffer;
 import io.github.dsheirer.sample.complex.Complex;
@@ -37,11 +36,12 @@ public class DMRStandardDecoderInstrumented extends DMRStandardDecoder
     private Listener<SymbolDecisionData> mSymbolDecisionDataListener;
 
     /**
-     * Instrumented version of the P25 C4FM decoder that supports registering listeners to provide access to data as
+     * Instrumented version of the DMR decoder that supports registering listeners to provide access to data as
      * it is being processed by the decoder.
      */
-    public DMRStandardDecoderInstrumented()
+    public DMRStandardDecoderInstrumented(DecodeConfigDMR config)
     {
+        super(config);
     }
 
     /**

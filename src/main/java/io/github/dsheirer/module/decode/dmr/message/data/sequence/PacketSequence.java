@@ -19,7 +19,10 @@
 
 package io.github.dsheirer.module.decode.dmr.message.data.sequence;
 
-import io.github.dsheirer.module.decode.ip.Header;
+import io.github.dsheirer.module.decode.dmr.message.data.block.DataBlock;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.Preamble;
+import io.github.dsheirer.module.decode.dmr.message.data.header.PacketSequenceHeader;
+import io.github.dsheirer.module.decode.dmr.message.data.header.ProprietaryDataHeader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,20 +32,90 @@ import java.util.List;
  */
 public class PacketSequence
 {
-    private Header mHeader;
-    private List<DataBlockMessage> mDataBlocks = new ArrayList<>();
+    private int mTimeslot;
+    private PacketSequenceHeader mPacketSequenceHeader;
+    private ProprietaryDataHeader mProprietaryDataHeader;
+    private List<Preamble> mPreambles = new ArrayList<>();
+    private List<DataBlock> mDataBlocks = new ArrayList<>();
 
-    public PacketSequence(Header header)
+    public PacketSequence(int timeslot)
     {
-        mHeader = header;
+        mTimeslot = timeslot;
     }
 
-    public Header getHeader()
+    @Override
+    public String toString()
     {
-        return mHeader;
+        StringBuilder sb = new StringBuilder();
+        sb.append("PACKET SEQUENCE ");
+        sb.append(" TS:").append(getTimeslot());
+        if(mPacketSequenceHeader != null)
+        {
+            sb.append(mPacketSequenceHeader.toString());
+        }
+        sb.append(" DATA BLOCKS:").append(mDataBlocks.size());
+        return sb.toString();
     }
 
-    public List<DataBlockMessage> getDataBlocks()
+    public boolean isComplete()
+    {
+        return false;
+    }
+
+    public int getTimeslot()
+    {
+        return mTimeslot;
+    }
+
+    /**
+     * Packet sequence header
+     */
+    public void setPacketSequenceHeader(PacketSequenceHeader header)
+    {
+        mPacketSequenceHeader = header;
+    }
+
+    /**
+     * Proprietary data header
+     */
+    public void setProprietaryHeader(ProprietaryDataHeader header)
+    {
+        mProprietaryDataHeader = header;
+    }
+
+
+
+    public void addPreamble(Preamble preamble)
+    {
+
+    }
+
+    public void addDataBlock(DataBlock dataBlock)
+    {
+
+    }
+
+    public PacketSequenceHeader getPacketSequenceHeader()
+    {
+        return mPacketSequenceHeader;
+    }
+
+    public boolean hasPacketSequenceHeader()
+    {
+        return mPacketSequenceHeader != null;
+    }
+
+    public ProprietaryDataHeader getProprietaryDataHeader()
+    {
+        return mProprietaryDataHeader;
+    }
+
+    public boolean hasProprietaryDataHeader()
+    {
+        return mProprietaryDataHeader != null;
+    }
+
+    public List<DataBlock> getDataBlocks()
     {
         return mDataBlocks;
     }

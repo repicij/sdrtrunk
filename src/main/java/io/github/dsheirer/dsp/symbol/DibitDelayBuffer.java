@@ -24,6 +24,7 @@ package io.github.dsheirer.dsp.symbol;
 
 import io.github.dsheirer.bits.BitSetFullException;
 import io.github.dsheirer.bits.CorrectedBinaryMessage;
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +43,7 @@ public class DibitDelayBuffer
      */
     public DibitDelayBuffer(int length)
     {
+        Validate.isTrue(length > 0, "Dibit buffer length must be greater than 0");
         mBuffer = new Dibit[length];
         reset();
     }
@@ -55,6 +57,44 @@ public class DibitDelayBuffer
         {
             mBuffer[x] = Dibit.D00_PLUS_1;
         }
+    }
+
+    /**
+     * Length of this circular buffer
+     */
+    public int length()
+    {
+        return mBuffer.length;
+    }
+
+    /**
+     * Returns the dibit at the specified index
+     * @param index to get
+     * @return dibit at the specified index
+     */
+    public Dibit get(int index)
+    {
+        if(index < 0 || index >= mBuffer.length)
+        {
+            throw new IllegalArgumentException("Index argument must be between 0 and buffer length [" + mBuffer.length + "]");
+        }
+
+        return mBuffer[index];
+    }
+
+    /**
+     * Sets the dibit at the specified index
+     * @param index of the dibit
+     * @param dibit to load at the specified index
+     */
+    public void set(int index, Dibit dibit)
+    {
+        if(index < 0 || index >= mBuffer.length)
+        {
+            throw new IllegalArgumentException("Index argument must be between 0 and buffer length [" + mBuffer.length + "]");
+        }
+
+        mBuffer[index] = dibit;
     }
 
     /**
@@ -82,7 +122,7 @@ public class DibitDelayBuffer
 
     /**
      * Retrieves a view of the buffer from the starting index to the specified length.  Note: if the requested
-     * length exceeds the length of this buffer, the contents will be unwrapped from the circular buffer and repeat.
+     * length exceeds the length of this buffer, the contents will be unwrapped from the circular buffer and repeated.
      * @param start of the view where 0 is the first element.
      * @param length of the dibit view
      * @return an array of dibits

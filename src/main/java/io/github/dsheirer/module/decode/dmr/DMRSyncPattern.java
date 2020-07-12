@@ -21,13 +21,19 @@ package io.github.dsheirer.module.decode.dmr;
 
 import java.util.EnumSet;
 
+/**
+ * DMR burst sync patterns enumeration.  In addition to the ETSI defined sync patterns, each enumeration entry also
+ * contains derived sync patterns that match decoded bit streams where a QPSK Phase-Locked Loop has locked to the signal
+ * misaligned by +/- 90 degrees, or 180 degrees.  These derived patterns can be used to detect PLL misalignment for
+ * PLL correction purposes.
+ */
 public enum DMRSyncPattern
 {
     BASE_STATION_DATA(0xDFF57D75DF5Dl, 0xBAAFEBEFBAFBl, 0x455014104504l, 0x200A828A20A2l, "BS DATA"),
-    BASE_STATION_VOICE(0x755FD7DF75F7l, 0xEFFABEBAEFAEl, 0x100541451051l, 0x8AA028208A08l, "BS VOIC"),
+    BASE_STATION_VOICE(0x755FD7DF75F7l, 0xEFFABEBAEFAEl, 0x100541451051l, 0x8AA028208A08l, "BS VOICE A"),
 
     MOBILE_STATION_DATA(0xD5D7F77FD757l, 0xBFBEAEEABEFEl, 0x404151154101l, 0x2A28088028A8l, "MS DATA"),
-    MOBILE_STATION_VOICE(0x7F7D5DD57DFDl, 0xEAEBFBBFEBABl, 0x151404401454l, 0x8082A22A8202l, "MS VOIC"),
+    MOBILE_STATION_VOICE(0x7F7D5DD57DFDl, 0xEAEBFBBFEBABl, 0x151404401454l, 0x8082A22A8202l, "MS VOICE A"),
     DIRECT_MODE_DATA_TIMESLOT_0(0xF7FDD5DDFD55l, 0xAEABBFBBABFFl, 0x515440445400l, 0x08022A2202AAl, "DM DAT0"),
     DIRECT_MODE_DATA_TIMESLOT_1(0xD7557F5FF7F5l, 0xBEFFEAFAAEAFl, 0x410015055150l, 0x28AA80A0080Al, "DM DAT1"),
     DIRECT_MODE_VOICE_TIMESLOT_0(0x5D577F7757FFl, 0xFBFEEAEEFEAAl, 0x040115110155l, 0xA2A88088A800l, "DM VOX0"),
@@ -36,41 +42,26 @@ public enum DMRSyncPattern
 
     RESERVED(0xDD7FF5D757DDl, 0xBBEAAFBEFEBBl, 0x441550410144l, 0x22800A28A822l, "RESERVED"),
 
-    //These are used to identify the sync-less sub frames of the voice super frame
-    VOICE_FRAME_B(-2, 0,0,0, "VOICE B"),
-    VOICE_FRAME_C(-3, 0, 0, 0,"VOICE C"),
-    VOICE_FRAME_D(-4, 0,0,0,"VOICE D"),
-    VOICE_FRAME_E(-5, 0,0,0,"VOICE E"),
-    VOICE_FRAME_F(-6, 0,0,0,"VOICE F"),
+    //These are used to identify the sync-less sub frames of a voice super frame
+    BS_VOICE_FRAME_B("BS VOICE B"),
+    BS_VOICE_FRAME_C("BS VOICE C"),
+    BS_VOICE_FRAME_D("BS VOICE D"),
+    BS_VOICE_FRAME_E("BS VOICE E"),
+    BS_VOICE_FRAME_F("BS VOICE F"),
 
-    UNKNOWN(-1, 0, 0, 0, "UNKNOWN");
+    MS_VOICE_FRAME_B("MS VOICE B"),
+    MS_VOICE_FRAME_C("MS VOICE C"),
+    MS_VOICE_FRAME_D("MS VOICE D"),
+    MS_VOICE_FRAME_E("MS VOICE E"),
+    MS_VOICE_FRAME_F("MS VOICE F"),
+
+    UNKNOWN("UNKNOWN");
 
     private long mPattern;
     private long mPlus90Pattern;
     private long mMinus90Pattern;
     private long mInvertedPattern;
     private String mLabel;
-
-    //Base Station sync patterns
-    public static final EnumSet<DMRSyncPattern> BASE_STATION_SYNC_PATTERNS = EnumSet.of(BASE_STATION_DATA, BASE_STATION_VOICE);
-
-    //Mobile Subscriber sync patterns
-    public static final EnumSet<DMRSyncPattern> MOBILE_SUBSCRIBER_SYNC_PATTERNS = EnumSet.of(MOBILE_STATION_DATA,
-            MOBILE_STATION_VOICE, DIRECT_MODE_DATA_TIMESLOT_0, DIRECT_MODE_DATA_TIMESLOT_1,
-            DIRECT_MODE_VOICE_TIMESLOT_0, DIRECT_MODE_VOICE_TIMESLOT_1, MOBILE_STATION_REVERSE_CHANNEL);
-
-    //Valid sync patterns (excluding the sync-less voice patterns)
-    public static final EnumSet<DMRSyncPattern> SYNC_PATTERNS = EnumSet.range(BASE_STATION_VOICE, RESERVED);
-
-    //Sync patterns containing a Common Announcement Channel (CACH)
-    public static final EnumSet<DMRSyncPattern> CACH_PATTERNS = EnumSet.of(BASE_STATION_DATA, BASE_STATION_VOICE);
-
-    //Sync patterns for Data Frames
-    public static final EnumSet<DMRSyncPattern> DATA_PATTERNS = EnumSet.of(BASE_STATION_DATA, MOBILE_STATION_DATA);
-
-    //Sync patterns for Voice Frames
-    public static final EnumSet<DMRSyncPattern> VOICE_PATTERNS = EnumSet.of(BASE_STATION_VOICE, MOBILE_STATION_VOICE,
-            VOICE_FRAME_B, VOICE_FRAME_C, VOICE_FRAME_D, VOICE_FRAME_E, VOICE_FRAME_F);
 
     /**
      * DMR Sync Patterns.  See TS 102-361-1, paragraph 9.1.1
@@ -83,6 +74,23 @@ public enum DMRSyncPattern
         mInvertedPattern = invertedPattern;
         mLabel = label;
     }
+
+    /**
+     * Alternate constructor for syncs that don't have defined patterns.
+     */
+    DMRSyncPattern(String label)
+    {
+        mLabel = label;
+    }
+
+    //Valid sync patterns (excluding the sync-less voice patterns)
+    public static final EnumSet<DMRSyncPattern> SYNC_PATTERNS = EnumSet.of(BASE_STATION_DATA, BASE_STATION_VOICE,
+        MOBILE_STATION_DATA, MOBILE_STATION_VOICE, DIRECT_MODE_DATA_TIMESLOT_0, DIRECT_MODE_DATA_TIMESLOT_1,
+        DIRECT_MODE_VOICE_TIMESLOT_0, DIRECT_MODE_VOICE_TIMESLOT_1, MOBILE_STATION_REVERSE_CHANNEL);
+
+    //Sync patterns containing a Common Announcement Channel (CACH)
+    private static final EnumSet<DMRSyncPattern> CACH_PATTERNS = EnumSet.of(BASE_STATION_DATA, BASE_STATION_VOICE,
+        BS_VOICE_FRAME_B, BS_VOICE_FRAME_C, BS_VOICE_FRAME_D, BS_VOICE_FRAME_E, BS_VOICE_FRAME_F);
 
     /**
      * Pattern that represents the enum entry
@@ -131,51 +139,5 @@ public enum DMRSyncPattern
     public boolean hasCACH()
     {
         return CACH_PATTERNS.contains(this);
-    }
-
-    /**
-     * Indicates if this is a data sync pattern
-     */
-    public boolean isData()
-    {
-        return DATA_PATTERNS.contains(this);
-    }
-
-    /**
-     * Indicates if this is a voice sync pattern
-     */
-    public boolean isVoice()
-    {
-        return VOICE_PATTERNS.contains(this);
-    }
-
-    /**
-     * Lookup the DMR Sync Pattern from the transmitted value.
-     *
-     * @param value to match to a pattern
-     * @return the matching enum entry or UNKNOWN
-     */
-    public static DMRSyncPattern fromValue(long value)
-    {
-        if(value < 0)
-        {
-            for(DMRSyncPattern pattern : VOICE_PATTERNS)
-            {
-                if(pattern.getPattern() == value)
-                {
-                    return pattern;
-                }
-            }
-            return UNKNOWN;
-        }
-        for(DMRSyncPattern pattern : SYNC_PATTERNS)
-        {
-            if(pattern.getPattern() == value)
-            {
-                return pattern;
-            }
-        }
-
-        return UNKNOWN;
     }
 }

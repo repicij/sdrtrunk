@@ -17,7 +17,7 @@
  * ****************************************************************************
  */
 
-package io.github.dsheirer.module.decode.dmr.message.data.sequence;
+package io.github.dsheirer.module.decode.dmr.message.data.block;
 
 import io.github.dsheirer.bits.CorrectedBinaryMessage;
 import io.github.dsheirer.identifier.Identifier;
@@ -32,7 +32,7 @@ import java.util.List;
 /**
  * Base class for data blocks using 1/2, 3/4, and 1/1 trellis coded data payloads
  */
-public abstract class DataBlockMessage extends DataMessage
+public abstract class DataBlock extends DataMessage
 {
     /**
      * Constructs an instance.
@@ -44,28 +44,34 @@ public abstract class DataBlockMessage extends DataMessage
      * @param timestamp message was received
      * @param timeslot for the DMR burst
      */
-    public DataBlockMessage(DMRSyncPattern syncPattern, CorrectedBinaryMessage message, CACH cach, SlotType slotType,
-                            long timestamp, int timeslot)
+    public DataBlock(DMRSyncPattern syncPattern, CorrectedBinaryMessage message, CACH cach, SlotType slotType,
+                     long timestamp, int timeslot)
     {
         super(syncPattern, message, cach, slotType, timestamp, timeslot);
     }
+
+    /**
+     * Data block payload for confirmed delivery.
+     */
+    public abstract CorrectedBinaryMessage getConfirmedPayload();
+
+    /**
+     * Data block payload for unconfirmed delivery
+     */
+    public abstract CorrectedBinaryMessage getUnConfirmedPayload();
+
+    /**
+     * Serial number for a confirmed data block
+     */
+    public abstract int getDataBlockSerialNumber();
 
     @Override
     public String toString()
     {
         StringBuilder sb = new StringBuilder();
 
-        if(hasCACH())
-        {
-            sb.append(getCACH());
-        }
-        else
-        {
-            sb.append("TS").append(getTimeslot());
-        }
-
         sb.append(" ").append(getSlotType());
-        sb.append(" ").append(getMessage());
+        sb.append(" ").append(getMessage().toHexString());
 
         return sb.toString();
     }

@@ -35,11 +35,15 @@ import io.github.dsheirer.identifier.Role;
 import io.github.dsheirer.identifier.integer.IntegerIdentifier;
 import io.github.dsheirer.message.IMessage;
 import io.github.dsheirer.module.decode.DecoderType;
+import io.github.dsheirer.module.decode.dmr.channel.DMRTimeslotFrequencyChannel;
 import io.github.dsheirer.module.decode.dmr.event.DMRDecodeEvent;
 import io.github.dsheirer.module.decode.dmr.message.DMRMessage;
 import io.github.dsheirer.module.decode.dmr.message.data.DataMessage;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.CSBKMessage;
-import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusVoiceChannelUser;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusChannelActive;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusDataChannelGrant;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusVoiceChannelGrant;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.Aloha;
 import io.github.dsheirer.module.decode.dmr.message.data.header.HeaderMessage;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.LCMessage;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.full.GroupVoiceChannelUser;
@@ -262,16 +266,70 @@ public class DMRDecoderState extends TimeslotDecoderState
 
     private void processCSBK(CSBKMessage csbk)
     {
-        broadcast(new DecoderStateEvent(this, Event.CONTINUATION, State.ACTIVE, getTimeslot()));
-
         switch(csbk.getOpcode())
         {
-            case MOTOROLA_CONPLUS_VOICE_CHANNEL_USER:
-                if(csbk instanceof ConnectPlusVoiceChannelUser)
+            case STANDARD_ALOHA:
+                if(csbk instanceof Aloha)
                 {
-                    ConnectPlusVoiceChannelUser cpvcu = (ConnectPlusVoiceChannelUser)csbk;
-                    processCallDetection(cpvcu.getLogicalSlotNumber(), cpvcu.getIdentifiers(), cpvcu.getTimestamp());
+                    Aloha aloha = (Aloha)csbk;
+
+                    if(aloha.hasRadioIdentifier())
+                    {
+                        DecodeEvent ackEvent = DMRDecodeEvent.builder(csbk.getTimestamp())
+                            .eventDescription(DecodeEventType.RESPONSE.name())
+                            .identifiers(new IdentifierCollection(aloha.getIdentifiers()))
+                            .timeslot(csbk.getTimeslot())
+                            .details("Aloha Acknowledge")
+                            .build();
+
+                        broadcast(ackEvent);
+
+                        resetState();
+                    }
                 }
+                broadcast(new DecoderStateEvent(this, Event.CONTINUATION, State.CONTROL, getTimeslot()));
+                break;
+            case STANDARD_ANNOUNCEMENT:
+                //TODO: anything?
+                broadcast(new DecoderStateEvent(this, Event.CONTINUATION, State.CONTROL, getTimeslot()));
+                break;
+            case MOTOROLA_CAPPLUS_ALOHA:
+                //This seems to be used on the non control timeslot for a control channel, so we use state=active
+                broadcast(new DecoderStateEvent(this, Event.CONTINUATION, State.ACTIVE, getTimeslot()));
+                break;
+            case MOTOROLA_CONPLUS_CHANNEL_ACTIVE:
+                if(csbk instanceof ConnectPlusChannelActive)
+                {
+                    ConnectPlusChannelActive cpca = (ConnectPlusChannelActive)csbk;
+
+                    processCallDetection(cpca.getDMRTimeslotFrequencyChannel(), cpca.getIdentifiers(), cpca.getTimestamp(),
+                        DecodeEventType.CALL_GROUP);
+                }
+
+                broadcast(new DecoderStateEvent(this, Event.CONTINUATION, State.ACTIVE, getTimeslot()));
+                break;
+            case MOTOROLA_CONPLUS_CHANNEL_USER:
+                //This is the current channel user ... update the radio identifier
+                getIdentifierCollection().update(csbk.getIdentifiers());
+                broadcast(new DecoderStateEvent(this, Event.CONTINUATION, State.ACTIVE, getTimeslot()));
+                break;
+            case MOTOROLA_CONPLUS_DATA_CHANNEL_GRANT:
+                if(csbk instanceof ConnectPlusDataChannelGrant)
+                {
+                    ConnectPlusDataChannelGrant cpdcg = (ConnectPlusDataChannelGrant)csbk;
+                    processCallDetection(cpdcg.getDMRTimeslotFrequencyChannel(), cpdcg.getIdentifiers(), cpdcg.getTimestamp(),
+                        DecodeEventType.DATA_CALL);
+                }
+                broadcast(new DecoderStateEvent(this, Event.CONTINUATION, State.CONTROL, getTimeslot()));
+                break;
+            case MOTOROLA_CONPLUS_VOICE_CHANNEL_GRANT:
+                if(csbk instanceof ConnectPlusVoiceChannelGrant)
+                {
+                    ConnectPlusVoiceChannelGrant cpvcu = (ConnectPlusVoiceChannelGrant)csbk;
+                    processCallDetection(cpvcu.getDMRTimeslotFrequencyChannel(), cpvcu.getIdentifiers(), cpvcu.getTimestamp(),
+                        DecodeEventType.CALL_GROUP);
+                }
+                broadcast(new DecoderStateEvent(this, Event.CONTINUATION, State.CONTROL, getTimeslot()));
                 break;
         }
 
@@ -286,31 +344,32 @@ public class DMRDecoderState extends TimeslotDecoderState
      * would be contingent on having a map of Logical Slot Numbers to frequency for the traffic channel manager to make
      * an allocation.
      *
-     * @param lsn for the call event
+     * @param dmrTimeslotFrequencyChannel for the call event
      * @param identifiers for the call event
      * @param timestamp of the event or update
      */
-    private void processCallDetection(int lsn, List<Identifier> identifiers, long timestamp)
+    private void processCallDetection(DMRTimeslotFrequencyChannel dmrTimeslotFrequencyChannel, List<Identifier> identifiers, long timestamp,
+                                      DecodeEventType eventType)
     {
         //Check to see if there is a current call event to see if the detected call event is actually for this timeslot
         //and we can then identify the LSN for this timeslot
         if(mCurrentLSN == null && mCurrentCallEvent != null &&
            isSameCall(mCurrentCallEvent.getIdentifierCollection(), identifiers))
         {
-            mCurrentLSN = lsn;
+            mCurrentLSN = dmrTimeslotFrequencyChannel.getLogicalSlotNumber();
             mNetworkConfigurationMonitor.setCurrentLogicalSlotNumber(mCurrentLSN);
         }
 
-        DecodeEvent event = mDetectedCallEventsMap.get(lsn);
+        DecodeEvent event = mDetectedCallEventsMap.get(dmrTimeslotFrequencyChannel.getLogicalSlotNumber());
 
         if(event == null)
         {
             event = DMRDecodeEvent.builder(timestamp)
                 .timeslot(getTimeslot())
                 .identifiers(new IdentifierCollection(identifiers))
-                .eventDescription(DecodeEventType.CALL_DETECT.toString())
+                .eventDescription(eventType.toString())
                 .build();
-            mDetectedCallEventsMap.put(lsn, event);
+            mDetectedCallEventsMap.put(dmrTimeslotFrequencyChannel.getLogicalSlotNumber(), event);
         }
         else
         {
@@ -327,12 +386,12 @@ public class DMRDecoderState extends TimeslotDecoderState
                     .identifiers(new IdentifierCollection(identifiers))
                     .eventDescription(DecodeEventType.CALL_DETECT.toString())
                     .build();
-                mDetectedCallEventsMap.put(lsn, event);
+                mDetectedCallEventsMap.put(dmrTimeslotFrequencyChannel.getLogicalSlotNumber(), event);
             }
         }
 
         //Only broadcast the call detect event if it doesn't match the current logical slot number
-        if(mCurrentLSN == null || mCurrentLSN != lsn)
+        if(mCurrentLSN == null || mCurrentLSN != dmrTimeslotFrequencyChannel.getLogicalSlotNumber())
         {
             broadcast(event);
         }

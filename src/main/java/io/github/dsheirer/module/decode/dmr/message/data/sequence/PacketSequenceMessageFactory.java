@@ -19,29 +19,28 @@
 
 package io.github.dsheirer.module.decode.dmr.message.data.sequence;
 
-import io.github.dsheirer.bits.CorrectedBinaryMessage;
-import io.github.dsheirer.module.decode.dmr.DMRSyncPattern;
-import io.github.dsheirer.module.decode.dmr.message.CACH;
-import io.github.dsheirer.module.decode.dmr.message.data.SlotType;
+import io.github.dsheirer.message.IMessage;
+import io.github.dsheirer.module.decode.dmr.message.data.header.HeaderMessage;
 
 /**
- * Unknown DMR data block message
+ * Converts a DMR packet sequence into a message
  */
-public class UnknownDataBlockMessage extends DataBlockMessage
+public class PacketSequenceMessageFactory
 {
     /**
-     * Constructs an instance.
-     *
-     * @param syncPattern either BASE_STATION_DATA or MOBILE_STATION_DATA
-     * @param message containing extracted 196-bit payload.
-     * @param cach for the DMR burst
-     * @param slotType for this data message
-     * @param timestamp message was received
-     * @param timeslot for the DMR burst
+     * Creates a message from a packet sequence
+      * @param packetSequence with message parts
+     * @return message
      */
-    public UnknownDataBlockMessage(DMRSyncPattern syncPattern, CorrectedBinaryMessage message, CACH cach,
-                                   SlotType slotType, long timestamp, int timeslot)
+    public static IMessage create(PacketSequence packetSequence)
     {
-        super(syncPattern, message, cach, slotType, timestamp, timeslot);
+        if(packetSequence != null && packetSequence.isComplete())
+        {
+            HeaderMessage headerMessage = packetSequence.getPacketSequenceHeader();
+
+
+        }
+
+        return null;
     }
 }

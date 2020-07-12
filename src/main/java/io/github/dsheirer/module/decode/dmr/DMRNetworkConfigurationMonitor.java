@@ -28,7 +28,7 @@ import io.github.dsheirer.module.decode.dmr.identifier.DMRNetwork;
 import io.github.dsheirer.module.decode.dmr.identifier.DMRSite;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.CSBKMessage;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusNeighborReport;
-import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusVoiceChannelUser;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusVoiceChannelGrant;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.LCMessage;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.shorty.ConnectPlusControlChannel;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.shorty.ConnectPlusTrafficChannel;
@@ -130,10 +130,10 @@ public class DMRNetworkConfigurationMonitor
                     mBrand = BRAND_MOTOROLA_CONNECT_PLUS;
                 }
                 break;
-            case MOTOROLA_CONPLUS_VOICE_CHANNEL_USER:
-                if(csbk instanceof ConnectPlusVoiceChannelUser)
+            case MOTOROLA_CONPLUS_VOICE_CHANNEL_GRANT:
+                if(csbk instanceof ConnectPlusVoiceChannelGrant)
                 {
-                    int lsn = ((ConnectPlusVoiceChannelUser)csbk).getLogicalSlotNumber();
+                    int lsn = ((ConnectPlusVoiceChannelGrant)csbk).getLogicalSlotNumber();
 
                     if(!mLogicalSlotNumbers.contains(lsn))
                     {

@@ -141,7 +141,7 @@ public class DecoderFactory
                 processAM(channel, modules, aliasList, decodeConfig);
                 break;
             case DMR:
-                processDMR(channel, userPreferences, modules, aliasList, decodeConfig);
+                processDMR(channel, userPreferences, modules, aliasList, (DecodeConfigDMR)decodeConfig);
                 break;
             case NBFM:
                 processNBFM(channel, modules, aliasList, decodeConfig);
@@ -336,9 +336,9 @@ public class DecoderFactory
      * @param decodeConfig for the DMR configuration
      */
     private static void processDMR(Channel channel, UserPreferences userPreferences, List<Module> modules,
-                                   AliasList aliasList, DecodeConfiguration decodeConfig)
+                                   AliasList aliasList, DecodeConfigDMR decodeConfig)
     {
-        modules.add(new DMRStandardDecoder());
+        modules.add(new DMRStandardDecoder(decodeConfig));
         DMRTrafficChannelManager trafficChannelManager = new DMRTrafficChannelManager(channel);
         modules.add(new DMRDecoderState(channel, 0, trafficChannelManager));
         modules.add(new DMRDecoderState(channel, 1, trafficChannelManager));

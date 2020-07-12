@@ -17,37 +17,35 @@
  * ****************************************************************************
  */
 
-package io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola;
+package io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.announcement;
 
 import io.github.dsheirer.bits.CorrectedBinaryMessage;
 import io.github.dsheirer.identifier.Identifier;
-import io.github.dsheirer.identifier.radio.RadioIdentifier;
-import io.github.dsheirer.identifier.talkgroup.TalkgroupIdentifier;
 import io.github.dsheirer.module.decode.dmr.DMRSyncPattern;
-import io.github.dsheirer.module.decode.dmr.identifier.DMRRadio;
-import io.github.dsheirer.module.decode.dmr.identifier.DMRTalkgroup;
 import io.github.dsheirer.module.decode.dmr.message.CACH;
 import io.github.dsheirer.module.decode.dmr.message.data.SlotType;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.CSBKMessage;
+import io.github.dsheirer.module.decode.dmr.message.type.AnnouncementType;
+import io.github.dsheirer.module.decode.dmr.message.type.SystemIdentityCode;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Motorola Connect Plus - Voice Channel Update
+ * DMR Tier III - Announcement Message
  */
-public class ConnectPlusVoiceChannelUser extends CSBKMessage
+public class Announcement extends CSBKMessage
 {
-    private static final int[] SOURCE_ADDRESS = new int[]{16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
-        32, 33, 34, 35, 36, 37, 38, 39};
-    private static final int[] GROUP_ADDRESS = new int[]{40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55,
-        56, 57, 58, 59, 60, 61, 62, 63};
-    private static final int[] LSN = new int[]{64, 65, 66, 67, 68};
-    private static final int[] COLOR_CODE = new int[]{72, 73, 74, 75, 76, 77, 78, 79};
+    private static final int[] ANNOUNCEMENT_TYPE = new int[]{16, 17, 18, 19, 20};
+    private static final int[] PARAMS_1 = new int[]{21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34};
+    private static final int REGISTRATION_REQUIRED_FLAG = 35;
+    private static final int[] BACKOFF = new int[]{36, 37, 38, 39};
+    private static final int SYSTEM_IDENTITY_CODE_OFFSET = 40;
+    private static final int[] PARAMS_2 = new int[]{56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72,
+        73, 74, 75, 76, 77, 78, 79};
 
-    private RadioIdentifier mRadio;
-    private TalkgroupIdentifier mTalkgroup;
     private List<Identifier> mIdentifiers;
+    private SystemIdentityCode mSystemIdentityCode;
 
     /**
      * Constructs an instance
@@ -59,7 +57,7 @@ public class ConnectPlusVoiceChannelUser extends CSBKMessage
      * @param timestamp
      * @param timeslot
      */
-    public ConnectPlusVoiceChannelUser(DMRSyncPattern syncPattern, CorrectedBinaryMessage message, CACH cach, SlotType slotType, long timestamp, int timeslot)
+    public Announcement(DMRSyncPattern syncPattern, CorrectedBinaryMessage message, CACH cach, SlotType slotType, long timestamp, int timeslot)
     {
         super(syncPattern, message, cach, slotType, timestamp, timeslot);
     }
@@ -75,55 +73,53 @@ public class ConnectPlusVoiceChannelUser extends CSBKMessage
         }
 
         sb.append("CC:").append(getSlotType().getColorCode());
-        sb.append(" CSBK ").append(getVendor());
-        sb.append(" VOICE CHANNEL USER FM:").append(getRadio());
-        sb.append(" TO:").append(getTalkgroup());
-        sb.append(" LSN:").append(getLogicalSlotNumber());
-        sb.append(" UNKNOWN:").append(getColorCode());
-        sb.append(" MSG:").append(getMessage().toHexString());
+        sb.append(" ANNOUNCEMENT ").append(getAnnouncementType());
+
         return sb.toString();
     }
 
     /**
-     * Source radio address
+     * Indicates if registration is required on this site
      */
-    public RadioIdentifier getRadio()
+    public boolean isRegistrationRequired()
     {
-        if(mRadio == null)
+        return getMessage().get(REGISTRATION_REQUIRED_FLAG);
+    }
+
+    /**
+     * Backoff value
+     */
+    public int getBackoff()
+    {
+        return getMessage().getInt(BACKOFF);
+    }
+
+    /**
+     * System Identity Code structure
+     */
+    public SystemIdentityCode getSystemIdentityCode()
+    {
+        if(mSystemIdentityCode == null)
         {
-            mRadio = DMRRadio.createFrom(getMessage().getInt(SOURCE_ADDRESS));
+            mSystemIdentityCode = new SystemIdentityCode(getMessage(), SYSTEM_IDENTITY_CODE_OFFSET, true);
         }
 
-        return mRadio;
+        return mSystemIdentityCode;
+    }
+    /**
+     * Announcement message type for this message
+     */
+    public AnnouncementType getAnnouncementType()
+    {
+        return getAnnouncementType(getMessage());
     }
 
     /**
-     * Talkgroup address
+     * Utility to get announcement message type for the specified message
      */
-    public TalkgroupIdentifier getTalkgroup()
+    public static AnnouncementType getAnnouncementType(CorrectedBinaryMessage message)
     {
-        if(mTalkgroup == null)
-        {
-            mTalkgroup = DMRTalkgroup.create(getMessage().getInt(GROUP_ADDRESS));
-        }
-
-        return mTalkgroup;
-    }
-
-    /**
-     * Color code for the channel grant site
-     */
-    public int getColorCode()
-    {
-        return getMessage().getInt(COLOR_CODE);
-    }
-
-    /**
-     * Logical Slot Number (LSN)
-     */
-    public int getLogicalSlotNumber()
-    {
-        return getMessage().getInt(LSN) - 1;
+        return AnnouncementType.fromValue(message.getInt(ANNOUNCEMENT_TYPE));
     }
 
     @Override
@@ -132,8 +128,6 @@ public class ConnectPlusVoiceChannelUser extends CSBKMessage
         if(mIdentifiers == null)
         {
             mIdentifiers = new ArrayList<>();
-            mIdentifiers.add(getTalkgroup());
-            mIdentifiers.add(getRadio());
         }
 
         return mIdentifiers;

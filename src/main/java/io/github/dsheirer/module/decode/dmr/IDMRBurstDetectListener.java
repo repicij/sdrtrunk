@@ -23,7 +23,7 @@ package io.github.dsheirer.module.decode.dmr;
 import io.github.dsheirer.bits.CorrectedBinaryMessage;
 
 /**
- * Listener interface to be notified each time a DMR burst has been detected or when sync is lost.
+ * Listener interface to be notified each time a DMR burst has been detected or when sync is or continues to be lost.
  */
 public interface IDMRBurstDetectListener
 {
@@ -32,7 +32,7 @@ public interface IDMRBurstDetectListener
      * @param binaryMessage burst Binary Message and any bit errors detected in the message
      * @param pattern SyncPattern
      */
-    void burstDetectedWithSync(CorrectedBinaryMessage binaryMessage, DMRSyncPattern pattern);
+    void burstDetected(CorrectedBinaryMessage binaryMessage, DMRSyncPattern pattern);
 
     /**
      * Indicates that sync has been lost on the dibit stream

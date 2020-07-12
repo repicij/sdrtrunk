@@ -21,27 +21,35 @@
  */
 package io.github.dsheirer.module.decode.dmr;
 
-import io.github.dsheirer.controller.channel.*;
+import io.github.dsheirer.controller.channel.Channel;
 import io.github.dsheirer.controller.channel.Channel.ChannelType;
+import io.github.dsheirer.controller.channel.ChannelEvent;
 import io.github.dsheirer.controller.channel.ChannelEvent.Event;
-import io.github.dsheirer.identifier.*;
+import io.github.dsheirer.controller.channel.ChannelGrantEvent;
+import io.github.dsheirer.controller.channel.IChannelEventListener;
+import io.github.dsheirer.controller.channel.IChannelEventProvider;
+import io.github.dsheirer.identifier.Identifier;
+import io.github.dsheirer.identifier.IdentifierCollection;
+import io.github.dsheirer.identifier.MutableIdentifierCollection;
+import io.github.dsheirer.identifier.Role;
 import io.github.dsheirer.identifier.scramble.ScrambleParameterIdentifier;
 import io.github.dsheirer.message.IMessage;
 import io.github.dsheirer.message.IMessageListener;
 import io.github.dsheirer.module.Module;
 import io.github.dsheirer.module.decode.DecoderType;
 import io.github.dsheirer.module.decode.config.DecodeConfiguration;
-import io.github.dsheirer.module.decode.dmr.channel.DMRChannel;
+import io.github.dsheirer.module.decode.dmr.channel.DMRTimeslotFrequencyChannel;
 import io.github.dsheirer.module.decode.event.DecodeEvent;
 import io.github.dsheirer.module.decode.event.DecodeEventType;
 import io.github.dsheirer.module.decode.event.IDecodeEvent;
 import io.github.dsheirer.module.decode.event.IDecodeEventProvider;
 import io.github.dsheirer.module.decode.p25.P25ChannelGrantEvent;
-import io.github.dsheirer.module.decode.p25.identifier.channel.*;
+import io.github.dsheirer.module.decode.p25.identifier.channel.APCO25Channel;
+import io.github.dsheirer.module.decode.p25.identifier.channel.APCO25ExplicitChannel;
+import io.github.dsheirer.module.decode.p25.identifier.channel.P25Channel;
+import io.github.dsheirer.module.decode.p25.identifier.channel.P25P2Channel;
+import io.github.dsheirer.module.decode.p25.identifier.channel.P25P2ExplicitChannel;
 import io.github.dsheirer.module.decode.p25.phase1.DecodeConfigP25Phase1;
-import io.github.dsheirer.module.decode.p25.phase1.message.IFrequencyBand;
-import io.github.dsheirer.module.decode.p25.phase1.message.pdu.ambtc.osp.AMBTCGroupDataChannelGrant;
-import io.github.dsheirer.module.decode.p25.phase1.message.pdu.ambtc.osp.AMBTCGroupVoiceChannelGrant;
 import io.github.dsheirer.module.decode.p25.phase1.message.pdu.ambtc.osp.AMBTCNetworkStatusBroadcast;
 import io.github.dsheirer.module.decode.p25.phase1.message.tsbk.Opcode;
 import io.github.dsheirer.module.decode.p25.phase1.message.tsbk.standard.osp.NetworkStatusBroadcast;
@@ -53,7 +61,12 @@ import io.github.dsheirer.source.config.SourceConfigTuner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -86,10 +99,10 @@ public class DMRTrafficChannelManager extends Module implements IDecodeEventProv
     private Queue<Channel> mAvailablePhase2TrafficChannelQueue = new ConcurrentLinkedQueue<>();
     private List<Channel> mManagedPhase2TrafficChannels;
 
-    private Map<DMRChannel,Channel> mAllocatedTrafficChannelMap = new ConcurrentHashMap<>();
-    private Map<DMRChannel,P25ChannelGrantEvent> mPhase1ChannelGrantEventMap = new ConcurrentHashMap<>();
-    private Map<DMRChannel,P25ChannelGrantEvent> mPhase2TS0ChannelGrantEventMap = new ConcurrentHashMap<>();
-    private Map<DMRChannel,P25ChannelGrantEvent> mPhase2TS1ChannelGrantEventMap = new ConcurrentHashMap<>();
+    private Map<DMRTimeslotFrequencyChannel,Channel> mAllocatedTrafficChannelMap = new ConcurrentHashMap<>();
+    private Map<DMRTimeslotFrequencyChannel,P25ChannelGrantEvent> mPhase1ChannelGrantEventMap = new ConcurrentHashMap<>();
+    private Map<DMRTimeslotFrequencyChannel,P25ChannelGrantEvent> mPhase2TS0ChannelGrantEventMap = new ConcurrentHashMap<>();
+    private Map<DMRTimeslotFrequencyChannel,P25ChannelGrantEvent> mPhase2TS1ChannelGrantEventMap = new ConcurrentHashMap<>();
 
     private Listener<ChannelEvent> mChannelEventListener;
     private Listener<IDecodeEvent> mDecodeEventListener;
@@ -214,35 +227,35 @@ public class DMRTrafficChannelManager extends Module implements IDecodeEventProv
      * Processes channel grants to allocate traffic channels and track overall channel usage.  Generates
      * decode events for each new channel that is allocated.
      *
-     * @param apco25Channel for the traffic channel
-     * @param serviceOptions for the traffic channel - optional can be null
-     * @param identifierCollection associated with the channel grant
-     * @param opcode to identify the call type for the event description
+//     * @param apco25Channel for the traffic channel
+//     * @param serviceOptions for the traffic channel - optional can be null
+//     * @param identifierCollection associated with the channel grant
+//     * @param opcode to identify the call type for the event description
      */
     public void processChannelGrant(int temp_lnc) {
-        if(temp_lnc != -922) {
-            return;
-        }
-        if(granted) {
-            return;
-        }
-        int[] abc = {0, 0, 9380};
-        granted = true;
-        DMRChannel dmr = new DMRChannel(abc[temp_lnc], 0);
-
-        //dmr.setFrequencyBand();
-        ServiceOptions so = new ServiceOptions(0);
-        List<Identifier> gcdg = new ArrayList<>();
-        //gcdg.add(APCO25Radio.createFrom(0));
-        MutableIdentifierCollection identifierCollection = new MutableIdentifierCollection();
-        identifierCollection.remove(IdentifierClass.USER);
-        identifierCollection.update(gcdg);
-        Channel trafficChannel = new Channel("WOW", ChannelType.STANDARD);
-        SourceConfigTuner sourceConfig = new SourceConfigTuner();
-        sourceConfig.setFrequency(dmr.getDownlinkFrequency());
-        trafficChannel.setSourceConfiguration(sourceConfig);
-        trafficChannel.setDecodeConfiguration(new DecodeConfigDMR());
-        broadcast(new ChannelGrantEvent(trafficChannel, Event.REQUEST_ENABLE, dmr, identifierCollection));
+//        if(temp_lnc != -922) {
+//            return;
+//        }
+//        if(granted) {
+//            return;
+//        }
+//        int[] abc = {0, 0, 9380};
+//        granted = true;
+//        DMRChannel dmr = new DMRChannel(abc[temp_lnc], 0);
+//
+//        //dmr.setFrequencyBand();
+//        ServiceOptions so = new ServiceOptions(0);
+//        List<Identifier> gcdg = new ArrayList<>();
+//        //gcdg.add(APCO25Radio.createFrom(0));
+//        MutableIdentifierCollection identifierCollection = new MutableIdentifierCollection();
+//        identifierCollection.remove(IdentifierClass.USER);
+//        identifierCollection.update(gcdg);
+//        Channel trafficChannel = new Channel("WOW", ChannelType.STANDARD);
+//        SourceConfigTuner sourceConfig = new SourceConfigTuner();
+//        sourceConfig.setFrequency(dmr.getDownlinkFrequency());
+//        trafficChannel.setSourceConfiguration(sourceConfig);
+//        trafficChannel.setDecodeConfiguration(new DecodeConfigDMR());
+//        broadcast(new ChannelGrantEvent(trafficChannel, Event.REQUEST_ENABLE, dmr, identifierCollection));
     }
     /**
      * Processes Phase 2 channel grants to allocate traffic channels and track overall channel usage.  Generates
@@ -253,8 +266,8 @@ public class DMRTrafficChannelManager extends Module implements IDecodeEventProv
      * @param identifierCollection associated with the channel grant
      * @param opcode to identify the call type for the event description
      */
-    private void processDMRChannelGrant(DMRChannel apco25Channel, ServiceOptions serviceOptions,
-                                           IdentifierCollection identifierCollection, Opcode opcode, long timestamp)
+    private void processDMRChannelGrant(DMRTimeslotFrequencyChannel apco25Channel, ServiceOptions serviceOptions,
+                                        IdentifierCollection identifierCollection, Opcode opcode, long timestamp)
     {
         if(mPhase2ScrambleParameters != null && identifierCollection instanceof MutableIdentifierCollection)
         {
@@ -651,9 +664,9 @@ public class DMRTrafficChannelManager extends Module implements IDecodeEventProv
 
                 if(channel.getDecodeConfiguration().getDecoderType() == DecoderType.P25_PHASE1)
                 {
-                    List<DMRChannel> channels = new ArrayList<>(mPhase1ChannelGrantEventMap.keySet());
+                    List<DMRTimeslotFrequencyChannel> channels = new ArrayList<>(mPhase1ChannelGrantEventMap.keySet());
 
-                    for(DMRChannel p25Channel: channels)
+                    for(DMRTimeslotFrequencyChannel p25Channel: channels)
                     {
                         if(p25Channel.getDownlinkFrequency() == frequency)
                         {
@@ -663,9 +676,9 @@ public class DMRTrafficChannelManager extends Module implements IDecodeEventProv
                 }
                 else
                 {
-                    List<DMRChannel> channels = new ArrayList<>(mPhase2TS0ChannelGrantEventMap.keySet());
+                    List<DMRTimeslotFrequencyChannel> channels = new ArrayList<>(mPhase2TS0ChannelGrantEventMap.keySet());
 
-                    for(DMRChannel p25Channel: channels)
+                    for(DMRTimeslotFrequencyChannel p25Channel: channels)
                     {
                         if(p25Channel.getDownlinkFrequency() == frequency)
                         {
@@ -675,7 +688,7 @@ public class DMRTrafficChannelManager extends Module implements IDecodeEventProv
 
                     channels = new ArrayList<>(mPhase2TS1ChannelGrantEventMap.keySet());
 
-                    for(DMRChannel p25Channel: channels)
+                    for(DMRTimeslotFrequencyChannel p25Channel: channels)
                     {
                         if(p25Channel.getDownlinkFrequency() == frequency)
                         {
@@ -701,9 +714,9 @@ public class DMRTrafficChannelManager extends Module implements IDecodeEventProv
                     switch(channelEvent.getEvent())
                     {
                         case NOTIFICATION_PROCESSING_STOP:
-                            DMRChannel toRemove = null;
+                            DMRTimeslotFrequencyChannel toRemove = null;
 
-                            for(Map.Entry<DMRChannel,Channel> entry: mAllocatedTrafficChannelMap.entrySet())
+                            for(Map.Entry<DMRTimeslotFrequencyChannel,Channel> entry: mAllocatedTrafficChannelMap.entrySet())
                             {
                                 if(entry.getValue() == channel)
                                 {
@@ -729,9 +742,9 @@ public class DMRTrafficChannelManager extends Module implements IDecodeEventProv
                             cleanupCallEvents(channel);
                             break;
                         case NOTIFICATION_PROCESSING_START_REJECTED:
-                            DMRChannel rejected = null;
+                            DMRTimeslotFrequencyChannel rejected = null;
 
-                            for(Map.Entry<DMRChannel,Channel> entry: mAllocatedTrafficChannelMap.entrySet())
+                            for(Map.Entry<DMRTimeslotFrequencyChannel,Channel> entry: mAllocatedTrafficChannelMap.entrySet())
                             {
                                 if(entry.getValue() == channel)
                                 {

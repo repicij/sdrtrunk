@@ -20,8 +20,6 @@ import io.github.dsheirer.bits.CorrectedBinaryMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-
 /**
  * P25 CRC check/correction methods
  */
@@ -38,17 +36,17 @@ public class CRCDMR
      */
     public static final int[] CCITT_80_CHECKSUMS = new int[]
         {
-            0x1BCB, 0x8DE5, 0xC6F2, 0x6B69, 0xB5B4, 0x52CA, 0x2175, 0x90BA, 0x404D,
-            0xA026, 0x5803, 0xAC01, 0xD600, 0x6310, 0x3998, 0x14DC, 0x27E, 0x92F,
-            0x8497, 0xC24B, 0xE125, 0xF092, 0x7059, 0xB82C, 0x5406, 0x2213, 0x9109,
-            0xC884, 0x6C52, 0x3E39, 0x9F1C, 0x479E, 0x2BDF, 0x95EF, 0xCAF7, 0xE57B,
-            0xF2BD, 0xF95E, 0x74BF, 0xBA5F, 0xDD2F, 0xEE97, 0xF74B, 0xFBA5, 0xFDD2,
-            0x76F9, 0xBB7C, 0x55AE, 0x22C7, 0x9163, 0xC8B1, 0xE458, 0x7A3C, 0x350E,
-            0x1297, 0x894B, 0xC4A5, 0xE252, 0x7939, 0xBC9C, 0x565E, 0x233F, 0x919F,
-            0xC8CF, 0xE467, 0xF233, 0xF919, 0xFC8C, 0x7656, 0x333B, 0x999D, 0xCCCE,
-            0x6E77, 0xB73B, 0xDB9D, 0xEDCE, 0x7EF7, 0xBF7B, 0xDFBD, 0xEFDE, 0x0001,
-            0x0002, 0x0004, 0x0008, 0x0010, 0x0020, 0x0040, 0x0080, 0x0100, 0x0200,
-            0x0400, 0x0800, 0x1000, 0x2000, 0x4000, 0x8000
+            0xE434, 0x721A, 0x390D, 0x9496, 0x4A4B, 0xAD35, 0xDE8A, 0x6F45, 0xBFB2,
+            0x5FD9, 0xA7FC, 0x53FE, 0x29FF, 0x9CEF, 0xC667, 0xEB23, 0xFD81, 0xF6D0,
+            0x7B68, 0x3DB4, 0x1EDA, 0xF6D, 0x8FA6, 0x47D3, 0xABF9, 0xDDEC, 0x6EF6,
+            0x377B, 0x93AD, 0xC1C6, 0x60E3, 0xB861, 0xD420, 0x6A10, 0x3508, 0x1A84,
+            0xD42, 0x6A1, 0x8B40, 0x45A0, 0x22D0, 0x1168, 0x8B4, 0x45A, 0x22D, 0x8906,
+            0x4483, 0xAA51, 0xDD38, 0x6E9C, 0x374E, 0x1BA7, 0x85C3, 0xCAF1, 0xED68,
+            0x76B4, 0x3B5A, 0x1DAD, 0x86C6, 0x4363, 0xA9A1, 0xDCC0, 0x6E60, 0x3730,
+            0x1B98, 0xDCC, 0x6E6, 0x373, 0x89A9, 0xCCC4, 0x6662, 0x3331, 0x9188,
+            0x48C4, 0x2462, 0x1231, 0x8108, 0x4084, 0x2042, 0x1021, 0x1, 0x2, 0x4, 0x8,
+            0x10, 0x20, 0x40, 0x80, 0x100, 0x200, 0x400, 0x800, 0x1000, 0x2000, 0x4000,
+            0x8000,
         };
 
     /**
@@ -125,12 +123,9 @@ public class CRCDMR
     }
 
     /**
-     * Error detection and correction of single-bit errors for CCITT 16-bit
-     * CRC protected 80-bit messages.
+     * Error detection and correction of single-bit errors for CCITT 16-bit CRC protected 80-bit messages.
      */
-    public static BinaryMessage correctCCITT80(BinaryMessage message,
-                                               int messageStart,
-                                               int crcStart)
+    public static BinaryMessage correctCCITT80(BinaryMessage message, int messageStart, int crcStart)
     {
         int calculated = 0; //Starting value
 
@@ -172,12 +167,32 @@ public class CRCDMR
     }
 
     /**
-     * Error detection and correction of single-bit errors for CCITT 16-bit
-     * CRC protected 80-bit messages.
+     * Calculates the CRC checksum for the specified message
+     * @param message to check
+     * @param start of the message
+     * @param length of the message (assumes the CRC checksum follows)
+     * @param checksums to use in calculating the message checksum
+     * @return calculated checksum
      */
-    public static int correctCCITT80(CorrectedBinaryMessage message, int messageStart, int crcStart, int type)
+    public static int calculate(BinaryMessage message, int start, int length, long[] checksums)
     {
-        int calculated = type; //Starting value
+        int calculated = 0;
+
+        /* Iterate the set bits and XOR running checksum with lookup value */
+        for(int i = message.nextSetBit(start); i >= start && i < length; i = message.nextSetBit(i + 1))
+        {
+            calculated ^= checksums[i - start];
+        }
+
+        return calculated;
+    }
+
+    /**
+     * Error detection and correction of single-bit errors for CCITT 16-bit CRC protected 80-bit messages.
+     */
+    public static int correctCCITT80(CorrectedBinaryMessage message, int messageStart, int crcStart, int mask)
+    {
+        int calculated = mask; //Starting value
 
         /* Iterate the set bits and XOR running checksum with lookup value */
         for(int i = message.nextSetBit(messageStart); i >= messageStart && i < crcStart; i = message.nextSetBit(i + 1))
@@ -188,6 +203,10 @@ public class CRCDMR
         int checksum = getIntChecksum(message, crcStart, 16);
 
         int residual = calculated ^ checksum;
+
+//        mLog.debug("CALC:" + Integer.toHexString(calculated).toUpperCase() +
+//            " CHECK:" + Integer.toHexString(checksum).toUpperCase() +
+//            " RESI:" + Integer.toHexString(residual).toUpperCase());
 
         if(residual == 0 || residual == 0xFFFF)
         {

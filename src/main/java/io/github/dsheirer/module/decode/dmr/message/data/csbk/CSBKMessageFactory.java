@@ -24,9 +24,24 @@ import io.github.dsheirer.edac.CRCDMR;
 import io.github.dsheirer.module.decode.dmr.DMRSyncPattern;
 import io.github.dsheirer.module.decode.dmr.message.CACH;
 import io.github.dsheirer.module.decode.dmr.message.data.SlotType;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.CapacityPlusAloha;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusChannelActive;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusChannelUser;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusDataChannelGrant;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusNeighborReport;
-import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusUnknownOpcode28;
-import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusVoiceChannelUser;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusTerminateChannelGrant;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusVoiceChannelGrant;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.Aloha;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.Preamble;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.announcement.AnnounceWithdrawTSCC;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.announcement.Announcement;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.announcement.CallTimerParameters;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.announcement.LocalTime;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.announcement.MassRegistration;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.announcement.NeighborSiteInformation;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.announcement.VoteNowAdvice;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.grant.PrivateDataChannelGrant;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.grant.PrivateVoiceChannelGrant;
 
 /**
  * Factory for creating DMR CSBK messages
@@ -39,18 +54,53 @@ public class CSBKMessageFactory
         if(message != null)
         {
             int corrected = CRCDMR.correctCCITT80(message, 0, 80, 0xA5A5);
-            message.setCorrectedBitCount(corrected);
 
             Opcode opcode = CSBKMessage.getOpcode(message);
 
             switch(opcode)
             {
+                case STANDARD_ALOHA:
+                    return new Aloha(pattern, message, cach, slotType, timestamp, timeslot);
+                case STANDARD_ANNOUNCEMENT:
+                    switch(Announcement.getAnnouncementType(message))
+                    {
+                        case ADJACENT_SITE_INFORMATION:
+                            return new NeighborSiteInformation(pattern, message, cach, slotType, timestamp, timeslot);
+                        case ANNOUNCE_OR_WITHDRAW_TSCC:
+                            return new AnnounceWithdrawTSCC(pattern, message, cach, slotType, timestamp, timeslot);
+                        case CALL_TIMER_PARAMETERS:
+                            return new CallTimerParameters(pattern, message, cach, slotType, timestamp, timeslot);
+                        case LOCAL_TIME:
+                            return new LocalTime(pattern, message, cach, slotType, timestamp, timeslot);
+                        case MASS_REGISTRATION:
+                            return new MassRegistration(pattern, message, cach, slotType, timestamp, timeslot);
+                        case VOTE_NOW_ADVICE:
+                            return new VoteNowAdvice(pattern, message, cach, slotType, timestamp, timeslot);
+                        default:
+                            return new Announcement(pattern, message, cach, slotType, timestamp, timeslot);
+                    }
+                case STANDARD_PREAMBLE:
+                    return new Preamble(pattern, message, cach, slotType, timestamp, timeslot);
+                case STANDARD_PRIVATE_DATA_CHANNEL_GRANT_SINGLE_ITEM:
+                    return new PrivateDataChannelGrant(pattern, message, cach, slotType, timestamp, timeslot);
+                case STANDARD_PRIVATE_VOICE_CHANNEL_GRANT:
+                    return new PrivateVoiceChannelGrant(pattern, message, cach, slotType, timestamp, timeslot);
+
+                case MOTOROLA_CAPPLUS_ALOHA:
+                    return new CapacityPlusAloha(pattern, message, cach, slotType, timestamp, timeslot);
+
                 case MOTOROLA_CONPLUS_NEIGHBOR_REPORT:
                     return new ConnectPlusNeighborReport(pattern, message, cach, slotType, timestamp, timeslot);
-                case MOTOROLA_CONPLUS_VOICE_CHANNEL_USER:
-                    return new ConnectPlusVoiceChannelUser(pattern, message, cach, slotType, timestamp, timeslot);
-                case MOTOROLA_CONPLUS_UNKNOWN_28:
-                    return new ConnectPlusUnknownOpcode28(pattern, message, cach, slotType, timestamp, timeslot);
+                case MOTOROLA_CONPLUS_VOICE_CHANNEL_GRANT:
+                    return new ConnectPlusVoiceChannelGrant(pattern, message, cach, slotType, timestamp, timeslot);
+                case MOTOROLA_CONPLUS_DATA_CHANNEL_GRANT:
+                    return new ConnectPlusDataChannelGrant(pattern, message, cach, slotType, timestamp, timeslot);
+                case MOTOROLA_CONPLUS_TERMINATE_CHANNEL_GRANT:
+                    return new ConnectPlusTerminateChannelGrant(pattern, message, cach, slotType, timestamp, timeslot);
+                case MOTOROLA_CONPLUS_CHANNEL_ACTIVE:
+                    return new ConnectPlusChannelActive(pattern, message, cach, slotType, timestamp, timeslot);
+                case MOTOROLA_CONPLUS_CHANNEL_USER:
+                    return new ConnectPlusChannelUser(pattern, message, cach, slotType, timestamp, timeslot);
                 default:
                     return new UnknownCSBKMessage(pattern, message, cach, slotType, timestamp, timeslot);
             }
