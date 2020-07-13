@@ -32,6 +32,7 @@ import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPl
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusTerminateChannelGrant;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusVoiceChannelGrant;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.Aloha;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.MoveTSCC;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.Preamble;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.announcement.AnnounceWithdrawTSCC;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.announcement.Announcement;
@@ -40,8 +41,13 @@ import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.announcem
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.announcement.MassRegistration;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.announcement.NeighborSiteInformation;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.announcement.VoteNowAdvice;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.grant.BroadcastTalkgroupVoiceChannelGrant;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.grant.DuplexPrivateDataChannelGrant;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.grant.DuplexPrivateVoiceChannelGrant;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.grant.PrivateDataChannelGrant;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.grant.PrivateVoiceChannelGrant;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.grant.TalkgroupDataChannelGrant;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.grant.TalkgroupVoiceChannelGrant;
 
 /**
  * Factory for creating DMR CSBK messages
@@ -79,12 +85,25 @@ public class CSBKMessageFactory
                         default:
                             return new Announcement(pattern, message, cach, slotType, timestamp, timeslot);
                     }
+                case STANDARD_BROADCAST_TALKGROUP_VOICE_CHANNEL_GRANT:
+                    return new BroadcastTalkgroupVoiceChannelGrant(pattern, message, cach, slotType, timestamp,
+                            timeslot);
+                case STANDARD_DUPLEX_PRIVATE_DATA_CHANNEL_GRANT:
+                    return new DuplexPrivateDataChannelGrant(pattern, message, cach, slotType, timestamp, timeslot);
+                case STANDARD_DUPLEX_PRIVATE_VOICE_CHANNEL_GRANT:
+                    return new DuplexPrivateVoiceChannelGrant(pattern, message, cach, slotType, timestamp, timeslot);
+                case STANDARD_MOVE_TSCC:
+                    return new MoveTSCC(pattern, message, cach, slotType, timestamp, timeslot);
                 case STANDARD_PREAMBLE:
                     return new Preamble(pattern, message, cach, slotType, timestamp, timeslot);
                 case STANDARD_PRIVATE_DATA_CHANNEL_GRANT_SINGLE_ITEM:
                     return new PrivateDataChannelGrant(pattern, message, cach, slotType, timestamp, timeslot);
                 case STANDARD_PRIVATE_VOICE_CHANNEL_GRANT:
                     return new PrivateVoiceChannelGrant(pattern, message, cach, slotType, timestamp, timeslot);
+                case STANDARD_TALKGROUP_DATA_CHANNEL_GRANT_SINGLE_ITEM:
+                    return new TalkgroupDataChannelGrant(pattern, message, cach, slotType, timestamp, timeslot);
+                case STANDARD_TALKGROUP_VOICE_CHANNEL_GRANT:
+                    return new TalkgroupVoiceChannelGrant(pattern, message, cach, slotType, timestamp, timeslot);
 
                 case MOTOROLA_CAPPLUS_ALOHA:
                     return new CapacityPlusAloha(pattern, message, cach, slotType, timestamp, timeslot);

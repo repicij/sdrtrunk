@@ -125,6 +125,9 @@ public class PrivateVoiceChannelGrant extends ChannelGrant
         if(mIdentifiers == null)
         {
             mIdentifiers = new ArrayList<>();
+            mIdentifiers.add(getChannel());
+            mIdentifiers.add(getSourceRadio());
+            mIdentifiers.add(getDestinationRadio());
         }
 
         return mIdentifiers;

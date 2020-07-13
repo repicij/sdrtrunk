@@ -22,8 +22,10 @@ package io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.grant;
 import io.github.dsheirer.bits.CorrectedBinaryMessage;
 import io.github.dsheirer.identifier.Identifier;
 import io.github.dsheirer.identifier.radio.RadioIdentifier;
+import io.github.dsheirer.identifier.talkgroup.TalkgroupIdentifier;
 import io.github.dsheirer.module.decode.dmr.DMRSyncPattern;
 import io.github.dsheirer.module.decode.dmr.identifier.DMRRadio;
+import io.github.dsheirer.module.decode.dmr.identifier.DMRTalkgroup;
 import io.github.dsheirer.module.decode.dmr.message.CACH;
 import io.github.dsheirer.module.decode.dmr.message.data.SlotType;
 
@@ -31,16 +33,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Channel Grant - Data - Private/Individual
+ * Channel Grant - Voice - Broadcast Talkgroup
  */
-public class PrivateDataChannelGrant extends ChannelGrant
+public class BroadcastTalkgroupVoiceChannelGrant extends ChannelGrant
 {
     private static final int EMERGENCY_FLAG = 30;
-    private static final int HI_RATE_PACKET_CHANNEL_FLAG = 31;
 
     private List<Identifier> mIdentifiers;
     private RadioIdentifier mSourceRadio;
-    private RadioIdentifier mDestinationRadio;
+    private TalkgroupIdentifier mDestinationTalkgroup;
 
     /**
      * Constructs an instance
@@ -52,7 +53,7 @@ public class PrivateDataChannelGrant extends ChannelGrant
      * @param timestamp
      * @param timeslot
      */
-    public PrivateDataChannelGrant(DMRSyncPattern syncPattern, CorrectedBinaryMessage message, CACH cach, SlotType slotType, long timestamp, int timeslot)
+    public BroadcastTalkgroupVoiceChannelGrant(DMRSyncPattern syncPattern, CorrectedBinaryMessage message, CACH cach, SlotType slotType, long timestamp, int timeslot)
     {
         super(syncPattern, message, cach, slotType, timestamp, timeslot);
     }
@@ -79,23 +80,10 @@ public class PrivateDataChannelGrant extends ChannelGrant
             sb.append(" ENCRYPTED");
         }
 
-        if(isHighRatePacketChannel())
-        {
-            sb.append(" DUAL-SLOT HI-RATE ");
-        }
-
-        sb.append(" PRIVATE DATA CHANNEL GRANT FM:").append(getSourceRadio());
-        sb.append(" TO:").append(getDestinationRadio());
+        sb.append(" BROADCAST TALKGROUP VOICE CHANNEL GRANT FM:").append(getSourceRadio());
+        sb.append(" TO:").append(getDestinationTalkgroup());
         sb.append(" CHAN:").append(getChannel());
         return sb.toString();
-    }
-
-    /**
-     * Indicates if the channel grant is for single-slot data (false) or dual-slot data (true)
-     */
-    public boolean isHighRatePacketChannel()
-    {
-        return getMessage().get(HI_RATE_PACKET_CHANNEL_FLAG);
     }
 
     /**
@@ -123,14 +111,14 @@ public class PrivateDataChannelGrant extends ChannelGrant
     /**
      * Destination radio identifier
      */
-    public RadioIdentifier getDestinationRadio()
+    public TalkgroupIdentifier getDestinationTalkgroup()
     {
-        if(mDestinationRadio == null)
+        if(mDestinationTalkgroup == null)
         {
-            mDestinationRadio = DMRRadio.createTo(getMessage().getInt(DESTINATION));
+            mDestinationTalkgroup = DMRTalkgroup.create(getMessage().getInt(DESTINATION));
         }
 
-        return mDestinationRadio;
+        return mDestinationTalkgroup;
     }
 
     @Override
@@ -141,7 +129,7 @@ public class PrivateDataChannelGrant extends ChannelGrant
             mIdentifiers = new ArrayList<>();
             mIdentifiers.add(getChannel());
             mIdentifiers.add(getSourceRadio());
-            mIdentifiers.add(getDestinationRadio());
+            mIdentifiers.add(getDestinationTalkgroup());
         }
 
         return mIdentifiers;

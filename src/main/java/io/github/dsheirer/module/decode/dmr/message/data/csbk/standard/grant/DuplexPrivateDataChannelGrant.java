@@ -31,12 +31,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Channel Grant - Data - Private/Individual
+ * Duplex Channel Grant - Data - Private/Individual
  */
-public class PrivateDataChannelGrant extends ChannelGrant
+public class DuplexPrivateDataChannelGrant extends ChannelGrant
 {
     private static final int EMERGENCY_FLAG = 30;
-    private static final int HI_RATE_PACKET_CHANNEL_FLAG = 31;
+    private static final int TARGET_IS_SOURCE_ADDRESS_FLAG = 31;
 
     private List<Identifier> mIdentifiers;
     private RadioIdentifier mSourceRadio;
@@ -52,7 +52,7 @@ public class PrivateDataChannelGrant extends ChannelGrant
      * @param timestamp
      * @param timeslot
      */
-    public PrivateDataChannelGrant(DMRSyncPattern syncPattern, CorrectedBinaryMessage message, CACH cach, SlotType slotType, long timestamp, int timeslot)
+    public DuplexPrivateDataChannelGrant(DMRSyncPattern syncPattern, CorrectedBinaryMessage message, CACH cach, SlotType slotType, long timestamp, int timeslot)
     {
         super(syncPattern, message, cach, slotType, timestamp, timeslot);
     }
@@ -79,23 +79,10 @@ public class PrivateDataChannelGrant extends ChannelGrant
             sb.append(" ENCRYPTED");
         }
 
-        if(isHighRatePacketChannel())
-        {
-            sb.append(" DUAL-SLOT HI-RATE ");
-        }
-
-        sb.append(" PRIVATE DATA CHANNEL GRANT FM:").append(getSourceRadio());
+        sb.append(" DUPLEX PRIVATE DATA CHANNEL GRANT FM:").append(getSourceRadio());
         sb.append(" TO:").append(getDestinationRadio());
         sb.append(" CHAN:").append(getChannel());
         return sb.toString();
-    }
-
-    /**
-     * Indicates if the channel grant is for single-slot data (false) or dual-slot data (true)
-     */
-    public boolean isHighRatePacketChannel()
-    {
-        return getMessage().get(HI_RATE_PACKET_CHANNEL_FLAG);
     }
 
     /**
@@ -114,7 +101,14 @@ public class PrivateDataChannelGrant extends ChannelGrant
     {
         if(mSourceRadio == null)
         {
-            mSourceRadio = DMRRadio.createFrom(getMessage().getInt(SOURCE));
+            if(getMessage().get(TARGET_IS_SOURCE_ADDRESS_FLAG))
+            {
+                mSourceRadio = DMRRadio.createFrom(getMessage().getInt(DESTINATION));
+            }
+            else
+            {
+                mSourceRadio = DMRRadio.createFrom(getMessage().getInt(SOURCE));
+            }
         }
 
         return mSourceRadio;
@@ -127,7 +121,14 @@ public class PrivateDataChannelGrant extends ChannelGrant
     {
         if(mDestinationRadio == null)
         {
-            mDestinationRadio = DMRRadio.createTo(getMessage().getInt(DESTINATION));
+            if(getMessage().get(TARGET_IS_SOURCE_ADDRESS_FLAG))
+            {
+                mDestinationRadio = DMRRadio.createTo(getMessage().getInt(SOURCE));
+            }
+            else
+            {
+                mDestinationRadio = DMRRadio.createTo(getMessage().getInt(DESTINATION));
+            }
         }
 
         return mDestinationRadio;
