@@ -20,11 +20,12 @@
 package io.github.dsheirer.module.decode.dmr.message.data.csbk;
 
 import io.github.dsheirer.bits.CorrectedBinaryMessage;
-import io.github.dsheirer.edac.CRCDMR;
 import io.github.dsheirer.module.decode.dmr.DMRSyncPattern;
 import io.github.dsheirer.module.decode.dmr.message.CACH;
 import io.github.dsheirer.module.decode.dmr.message.data.SlotType;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.CapacityPlusAloha;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.CapacityPlusUnknown41;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.CapacityPlusUnknown42;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusChannelActive;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusChannelUser;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusDataChannelGrant;
@@ -34,6 +35,9 @@ import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPl
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.Aloha;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.MoveTSCC;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.Preamble;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.acknowledge.Acknowledge;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.acknowledge.AcknowledgeStatus;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.acknowledge.RegistrationAccepted;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.announcement.AnnounceWithdrawTSCC;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.announcement.Announcement;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.announcement.CallTimerParameters;
@@ -59,12 +63,23 @@ public class CSBKMessageFactory
     {
         if(message != null)
         {
-            int corrected = CRCDMR.correctCCITT80(message, 0, 80, 0xA5A5);
-
             Opcode opcode = CSBKMessage.getOpcode(message);
 
             switch(opcode)
             {
+                case STANDARD_ACKNOWLEDGE_RESPONSE_INBOUND_TSCC:
+                case STANDARD_ACKNOWLEDGE_RESPONSE_OUTBOUND_TSCC:
+                case STANDARD_ACKNOWLEDGE_RESPONSE_INBOUND_PAYLOAD:
+                case STANDARD_ACKNOWLEDGE_RESPONSE_OUTBOUND_PAYLOAD:
+                    switch(Acknowledge.getReason(message))
+                    {
+                        case TS_REGISTRATION_ACCEPTED:
+                            return new RegistrationAccepted(pattern, message, cach, slotType, timestamp, timeslot);
+                        case TS_ACCEPTED_FOR_STATUS_POLLING_SERVICE:
+                            return new AcknowledgeStatus(pattern, message, cach, slotType, timestamp, timeslot);
+                        default:
+                            return new Acknowledge(pattern, message, cach, slotType, timestamp, timeslot);
+                    }
                 case STANDARD_ALOHA:
                     return new Aloha(pattern, message, cach, slotType, timestamp, timeslot);
                 case STANDARD_ANNOUNCEMENT:
@@ -107,6 +122,10 @@ public class CSBKMessageFactory
 
                 case MOTOROLA_CAPPLUS_ALOHA:
                     return new CapacityPlusAloha(pattern, message, cach, slotType, timestamp, timeslot);
+                case MOTOROLA_CAPPLUS_UNK_41:
+                    return new CapacityPlusUnknown41(pattern, message, cach, slotType, timestamp, timeslot);
+                case MOTOROLA_CAPPLUS_UNK_42:
+                    return new CapacityPlusUnknown42(pattern, message, cach, slotType, timestamp, timeslot);
 
                 case MOTOROLA_CONPLUS_NEIGHBOR_REPORT:
                     return new ConnectPlusNeighborReport(pattern, message, cach, slotType, timestamp, timeslot);

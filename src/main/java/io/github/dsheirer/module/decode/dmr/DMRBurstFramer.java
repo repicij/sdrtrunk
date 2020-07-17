@@ -126,6 +126,8 @@ public class DMRBurstFramer implements Listener<Dibit>, IDMRSyncDetectListener
                     {
                         //We were synchronized but now we're not.  Update the sync detector with the current message
                         //sync field contents so that we can restart sync detection from this point
+                        long current = getSyncFieldValue();
+                        mLog.debug("Current: " + Long.toHexString(current).toUpperCase());
                         mSyncDetector.setCurrentSyncValue(getSyncFieldValue());
                     }
                 }
@@ -160,28 +162,28 @@ public class DMRBurstFramer implements Listener<Dibit>, IDMRSyncDetectListener
 
         if(carrierLock == QPSKCarrierLock.NORMAL)
         {
-//            mLog.info("*** Sync Detected: " + pattern);
+            mLog.info("*** Sync Detected: " + pattern);
             dispatchMessage(pattern, bitErrors);
         }
         else
         {
-//            mLog.error("*** PLL Lock Misalign Detected - Correcting: " + carrierLock);
+            mLog.error("*** PLL Lock Misalign Detected - Correcting: " + carrierLock);
 
-            if(mPhaseLockedLoop != null)
-            {
-                switch(carrierLock)
-                {
-                    case PLUS_90:
-                        mPhaseLockedLoop.correctInversion(-PLL_PHASE_CORRECTION_90_DEGREES);
-                        break;
-                    case MINUS_90:
-                        mPhaseLockedLoop.correctInversion(PLL_PHASE_CORRECTION_90_DEGREES);
-                        break;
-                    case INVERTED:
-                        mPhaseLockedLoop.correctInversion(PLL_PHASE_CORRECTION_180_DEGREES);
-                        break;
-                }
-            }
+//            if(mPhaseLockedLoop != null)
+//            {
+//                switch(carrierLock)
+//                {
+//                    case PLUS_90:
+//                        mPhaseLockedLoop.correctInversion(-PLL_PHASE_CORRECTION_90_DEGREES);
+//                        break;
+//                    case MINUS_90:
+//                        mPhaseLockedLoop.correctInversion(PLL_PHASE_CORRECTION_90_DEGREES);
+//                        break;
+//                    case INVERTED:
+//                        mPhaseLockedLoop.correctInversion(PLL_PHASE_CORRECTION_180_DEGREES);
+//                        break;
+//                }
+//            }
 
             //Correct the message buffer dibits and dispatch the message
             dispatchMessage(pattern, bitErrors, carrierLock);
@@ -271,11 +273,18 @@ public class DMRBurstFramer implements Listener<Dibit>, IDMRSyncDetectListener
             case PLUS_90:
             case MINUS_90:
             case INVERTED:
+                long current = getSyncFieldValue();
+
                 for(int x = 0; x < mMessageBuffer.length(); x++)
                 {
                     Dibit misalignedDibit = mMessageBuffer.get(x);
                     mMessageBuffer.set(x, carrierLock.correct(misalignedDibit));
                 }
+
+                long fixed = getSyncFieldValue();
+                mLog.debug("Sync: " + Long.toHexString(current).toUpperCase() +
+                        " Fixed To: " + Long.toHexString(fixed).toUpperCase() +
+                        " for " + carrierLock);
                 break;
         }
 

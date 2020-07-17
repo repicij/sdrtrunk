@@ -28,18 +28,12 @@ import io.github.dsheirer.dsp.symbol.ISyncDetectListener;
 import io.github.dsheirer.message.IMessage;
 import io.github.dsheirer.message.SyncLossMessage;
 import io.github.dsheirer.module.decode.dmr.message.CACH;
-import io.github.dsheirer.module.decode.dmr.message.DMRBurst;
 import io.github.dsheirer.module.decode.dmr.message.DMRMessage;
 import io.github.dsheirer.module.decode.dmr.message.DMRMessageFactory;
 import io.github.dsheirer.module.decode.dmr.message.data.block.DataBlock;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.UnknownCSBKMessage;
-import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.CapacityPlusAloha;
-import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusChannelActive;
-import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusChannelUser;
-import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusDataChannelGrant;
-import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.ConnectPlusTerminateChannelGrant;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.CapacityPlusUnknown41;
 import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.Preamble;
-import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.grant.ChannelGrant;
 import io.github.dsheirer.module.decode.dmr.message.data.header.DataHeader;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.shorty.ShortLCMessage;
 import io.github.dsheirer.protocol.Protocol;
@@ -298,50 +292,22 @@ public class DMRMessageFramer implements Listener<Dibit>, IDMRBurstDetectListene
         @Override
         public void receive(IMessage message)
         {
+            mLog.info("TS:" + message.getTimeslot() + " " + message.toString());
+
             if(message instanceof DMRMessage)
             {
-//                mLog.info(((DMRMessage)message).getMessage().toHexString() + " TS:" + ((DMRMessage)message).getTimeslot() + " " + message.toString());
+//                mLog.info("TS:" + ((DMRMessage)message).getTimeslot() + " " + message.toString());
                 mHasDMRData = true;
             }
 
-            if(message instanceof CapacityPlusAloha)
+            if(message instanceof CapacityPlusUnknown41)
             {
-//                mLog.info("TS:" + ((DMRMessage)message).getTimeslot() + " " + message.toString());
-            }
-
-            if(message instanceof DMRBurst && message.getTimeslot() == 0)
-            {
-//                mLog.info("TS:" + ((DMRMessage)message).getTimeslot() + " " + message.toString());
+//                mLog.info("TS:" + message.getTimeslot() + " " + message.toString());
             }
 
             if(message instanceof UnknownCSBKMessage)
             {
 //                mLog.info("TS:" + ((DMRMessage)message).getTimeslot() + " " + message.toString());
-            }
-
-            if(message instanceof ChannelGrant)
-            {
-                mLog.info("TS:" + ((DMRMessage)message).getTimeslot() + " " + message.toString());
-            }
-
-            if(message instanceof ConnectPlusDataChannelGrant)
-            {
-//                mLog.info("TS:" + ((DMRMessage)message).getTimeslot() + " " + message.toString());
-            }
-
-            if(message instanceof ConnectPlusTerminateChannelGrant)
-            {
-//                mLog.info("TS:" + ((DMRMessage)message).getTimeslot() + " " + message.toString());
-            }
-
-            if(message instanceof ConnectPlusChannelActive)
-            {
-//                mLog.info("TS:" + ((DMRMessage)message).getTimeslot() + " " + message.toString());
-            }
-
-            if(message instanceof ConnectPlusChannelUser)
-            {
-                mLog.info("TS:" + ((DMRMessage)message).getTimeslot() + " " + message.toString());
             }
 
             if(message instanceof Preamble)
@@ -379,8 +345,8 @@ public class DMRMessageFramer implements Listener<Dibit>, IDMRBurstDetectListene
     public static void main(String[] args)
     {
 //        String file = "/home/denny/SDRTrunk/recordings/20200513_143340_9600BPS_DMR_SaiaNet_Onondaga_Control.bits";
-        String path = "/home/denny/SDRTrunk/recordings/";
-        String file = path + "20200710_053632_9600BPS_DMR_Niles_Radio_Coconino_Control.bits";
+        String path = "C:\\Users\\Denny\\SDRTrunk\\recordings\\";
+        String file = path + "20200716_223547_9600BPS_DMR_Dallas_Unk_Dallas_Unk.bits";
 
         MessageListener listener = new MessageListener();
         DecodeConfigDMR config = new DecodeConfigDMR();

@@ -21,6 +21,7 @@ package io.github.dsheirer.module.decode.dmr.message.data.csbk;
 
 import io.github.dsheirer.bits.BinaryMessage;
 import io.github.dsheirer.bits.CorrectedBinaryMessage;
+import io.github.dsheirer.edac.CRCDMR;
 import io.github.dsheirer.module.decode.dmr.DMRSyncPattern;
 import io.github.dsheirer.module.decode.dmr.message.CACH;
 import io.github.dsheirer.module.decode.dmr.message.data.DataMessage;
@@ -53,8 +54,10 @@ public abstract class CSBKMessage extends DataMessage
     {
         super(syncPattern, message, cach, slotType, timestamp, timeslot);
 
+        int correctedBitCount = CRCDMR.correctCCITT80(message, 0, 80, 0xA5A5);
+
         //Set message valid flag according to the corrected bit count for the CRC protected message
-        setValid(getMessage().getCorrectedBitCount() != 2);
+        setValid(correctedBitCount < 2);
     }
 
     public boolean isLastBlock()
